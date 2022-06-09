@@ -41,7 +41,7 @@ class WeComHook:
 
 if __name__ == '__main__':
     # """
-    wh = WeComHook('https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=61afd9ee-47d8-4be2-b7d0-49e535abf2db')
-    t = WeComText("大家好,请", ['@all'])
+    # wh = WeComHook('******')
+    # t = WeComText("大家好,请", ['@all'])
     # wh.send(t)
     # """
