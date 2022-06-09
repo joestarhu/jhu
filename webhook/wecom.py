@@ -40,6 +40,7 @@ class WeComHook:
         return rsp
 
 if __name__ == '__main__':
+    ...
     # """
     # wh = WeComHook('******')
     # t = WeComText("大家好,请", ['@all'])

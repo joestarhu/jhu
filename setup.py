@@ -2,6 +2,7 @@
 
 """
 制作PIP包教程
+1. 先设置一个setup文件
 """
 from distutils.core import setup
 import setuptools
@@ -23,6 +24,6 @@ setup(
             'Topic :: Software Development :: Libraries :: Python Modules',
             'Programming Language :: Python :: 3.8',
     ],
-    install_requires=['requests',], # 依赖的包
+    install_requires=['requests','pydantic'], # 依赖的包
     zip_safe = True
 )
