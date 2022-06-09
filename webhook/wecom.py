@@ -8,7 +8,7 @@ from enum import Enum
 from typing import Optional
 from requests import Session
 
-class WecomMsgType(str, Enum):
+class WeComMsgType(str, Enum):
     txt = 'text'
 
 class BaseContent:
@@ -27,9 +27,9 @@ class WeComText(BaseContent):
     def __init__(self, content: str, mentioned_list: Optional[list] = None, mentioned_mobile_list: Optional[list] = None):
         if len(content) >= 2048:
             raise Exception('content内容长度不能超过2048字节')
-        super().__init__(msgtype=WecomMsgType.txt.value, content=content,
+        super().__init__(msgtype=WeComMsgType.txt.value, content=content,
                          mentioned_list=mentioned_list, mentioned_mobile_list=mentioned_mobile_list)
-class WecomHook:
+class WeComHook:
     def __init__(self, url: str):
         self.url = url
 
@@ -41,7 +41,7 @@ class WecomHook:
 
 if __name__ == '__main__':
     """
-    wh = WecomHook('https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=61afd9ee-47d8-4be2-b7d0-49e535abf2db')
+    wh = WeComHook('https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=61afd9ee-47d8-4be2-b7d0-49e535abf2db')
     t = WeComText("大家好,请大家在本日17:00之前,将周报发送给胡健;周报文件名统一为：产品设计2部-XXX-工作周报(YYYYMMDD-YYYYMMDD)比如： 产品设计2部-胡健-工作周报(20210628-20210702）,同时周报里面的本周日期和下周日期也要检查下", ['@all'])
     wh.send(t)
     """
