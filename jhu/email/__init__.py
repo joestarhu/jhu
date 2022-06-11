@@ -1,1 +1,1 @@
-from jhu_smtp import Mail
+from .jhu_smtp import Mail
