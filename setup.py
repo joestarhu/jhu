@@ -3,6 +3,9 @@
 """
 制作PIP包教程
 1. 先设置一个setup文件
+2. 运行setup.py sdist
+3. 然后会得到一个dist文件, 这个时候就可用pip install dist/xxxxx 来安装文件了
+4. twine upload dist/* 可上传安装,需要输入pypi的用户名和密码
 """
 from distutils.core import setup
 import setuptools
