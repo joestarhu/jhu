@@ -1,6 +1,6 @@
 '''
 作者:J.Hu
-日期:2022-06-09
+日期:2022-07-01
 内容:
 # 功能描述：
  - 支持邮件发送
@@ -24,7 +24,6 @@ from email.header import Header
 from smtplib import SMTP, SMTP_SSL
 from pydantic import BaseModel
 from typing import Optional
-
 
 class MailKeyword(str):
     # 发送信关键字
@@ -194,7 +193,7 @@ class Mail:
             val_lst = self.__get_receive_lst(val)
             receive_lst.extend([mail.addr for mail in val_lst])
             mime[val] = ','.join(
-                [formataddr([mail.addr, mail.name]) for mail in val_lst])
+                [formataddr([mail.name, mail.addr]) for mail in val_lst])
 
         # 正文内容设置
         mime.attach(MIMEText(content, self.mail_type, self.encode))
