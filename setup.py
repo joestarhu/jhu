@@ -7,13 +7,14 @@
 3. 然后会得到一个dist文件, 这个时候就可用pip install dist/xxxxx 来安装文件了
 4. twine upload dist/* 可上传安装,需要输入pypi的用户名和密码
 """
-from distutils.core import setup
 import setuptools
+# from distutils.core import setup
+from setuptools import setup
 
 setup(
     name='jhu',  # 包的名称
-    version='1.0.0',  # 包的版本,每次更新或升级包都需要更新它
-    description='jhu是一个个人工具包,简化或自动化的做一些任务',  # 包的描述
+    version='1.0.1',  # 包的版本,每次更新或升级包都需要更新它
+    description='jhu是一个工具包,简化或自动化的做一些任务',  # 包的描述
     author='J.Hu',  # 作者
     email='joestarhu@163.com',  # 作者邮箱
     url='https://github.com/joestarhu/jhu',  # 项目地址
