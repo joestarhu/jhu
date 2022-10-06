@@ -210,18 +210,3 @@ class Mail:
         关闭链接
         """
         self.smtp.close()
-
-
-if __name__ == '__main__':
-    server = 'smtp.qq.com'
-    user = '344242312@qq.com'
-    pwd = 'izzzrdislhwpbied'
-    m = Mail(server)
-    m.login(user, pwd, 'hello_world')
-
-    attach = ['/Users/hujian/code/jhu/requirements.txt']
-
-    m.add_receiver_to('*****@163.com', 'to_name')
-    m.add_receiver_cc('*****@163.com', 'cc_name')
-    m.add_receiver_bcc('*****@163.com')
-    m.send('这是一次测试', '请注意这是一次测试演戏', attach)
