@@ -153,6 +153,9 @@ class WebdriveChrome:
         # 默认等待时间
         self._waittime = 5
 
+
+        cur_version = ''
+        chrome_list = []
         if not os.path.exists(driver_path):
             chrome_list = setup_dirver(cur_version,chrome_list)
 
