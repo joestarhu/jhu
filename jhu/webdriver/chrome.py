@@ -31,10 +31,11 @@ def get_chromedriver_type() -> str:
     'chromedriver_linux64.zip': Linux驱动
     'chromedriver_win32.zip': Windows驱动
     """
-    if platform.system() == 'Darwin':
+    system_info = platform.system()
+    if system_info == 'Darwin':
         # x86_64架构视为非M系列 M系列为ARM架构
         return 'chromedriver_mac64.zip' if platform.machine() == 'x86_64' else 'chromedriver_mac64_m1.zip'
-    elif platform.system() == 'Linux':
+    elif system_info == 'Linux':
         return 'chromedriver_linux64.zip'
     else:
         return 'chromedriver_win32.zip'
