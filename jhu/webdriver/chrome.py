@@ -1,12 +1,18 @@
+#!/usr/bin/env python3
+
 """
 作者:J.Hu
-日期:2022-10-06
+日期:2022-10-27
 内容:
+> 针对新版本selenum4.X进行了部分方法的更新
 > 自动分析系统并下载匹配最新的驱动,免除了手动下载匹配驱动
 > 抽象化部分操作,通过简单的结构化配置即可实现脚本运行
 """
 from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.by import By
 from requests import session
+from typing import List
 import json
 import zipfile
 import os
@@ -40,6 +46,7 @@ def get_chromedriver_type() -> str:
     else:
         return 'chromedriver_win32.zip'
 
+
 def get_chromedriver_list(url: str) -> list:
     """获取可供下载的驱动版本
 
@@ -58,6 +65,7 @@ def get_chromedriver_list(url: str) -> list:
         chrome_list = json.loads(rsp.text)
     # 获取到的版本号为最后有一个/,舍弃掉,并且分割出版本数字,版本号中含有非数字的全都作为非版本数据处理掉,为后续版本比较处理,全部int化掉
     return [[int(i) for i in val['name'][:-1].split('.')] for val in chrome_list if val['name'][0].isdigit()]
+
 
 def download_chrome_driver(url: str) -> None:
     """下载驱动文件并解压缩和设置权限
@@ -80,6 +88,7 @@ def download_chrome_driver(url: str) -> None:
         zf.extract(driver_name)
     os.chmod(driver_name, 766)
 
+
 def get_chrome_version(message: str) -> str:
     """从错误信息中寻找浏览器的版本信息
 
@@ -100,7 +109,8 @@ def get_chrome_version(message: str) -> str:
         return ''
     return message[start_idx:end_idx].strip()
 
-def fit_chrome_version(cur_version:str, check_list:list, prefix_url: str = DRIVER_URL) -> str:
+
+def fit_chrome_version(cur_version: str, check_list: list, prefix_url: str = DRIVER_URL) -> str:
     """根据当前的版本,匹配下载版本. 匹配的下载版本号不大于当前版本号,且是最接近的一个版本号
 
     Parameters
@@ -131,45 +141,60 @@ def fit_chrome_version(cur_version:str, check_list:list, prefix_url: str = DRIVE
             version_info = version_info + '.' + str(cur_list[i] - ver_dif)
     return prefix_url + version_info + '/'
 
-def setup_dirver(cur_version:str, chrome_list:list):
+
+def setup_dirver(cur_version: str, chrome_list: list):
     if not chrome_list:
         chrome_list = get_chromedriver_list(DRIVER_URL)
-    download_url = fit_chrome_version(cur_version, chrome_list) + get_chromedriver_type()
+    download_url = fit_chrome_version(
+        cur_version, chrome_list) + get_chromedriver_type()
     download_chrome_driver(download_url)
     return chrome_list
 
 
+# 基于Xpath的Webdirve动作
+class XpathActionInfo:
+    def __init__(self, xpath, func, val):
+        self.xpath = xpath
+        self.func = func
+        self.val = val
+
 
 class WebdriveChrome:
     def __init__(self, driver_path=DRIVER_PATH):
+        """初始化Webdriver Chrome
+        """
         options = webdriver.ChromeOptions()
         # 忽略SSL验证
         options.add_argument('ignore-certificate-errors')
         # 伪装浏览器
-        options.add_argument('User-Agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.159 Safari/537.36')
+        options.add_argument(
+            'User-Agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.159 Safari/537.36')
 
         # 屏蔽chrome正受到自动测试软件的控制
-        options.add_experimental_option("excludeSwitches", ["enable-automation"])
+        options.add_experimental_option(
+            "excludeSwitches", ["enable-automation"])
 
         # 默认等待时间
         self._waittime = 5
 
-
         cur_version = ''
         chrome_list = []
         if not os.path.exists(driver_path):
-            chrome_list = setup_dirver(cur_version,chrome_list)
+            chrome_list = setup_dirver(cur_version, chrome_list)
+
+        service = Service(executable_path=driver_path)
 
         # 默认尝试3次.
         for _ in range(3):
             try:
-                driver = webdriver.Chrome(executable_path=driver_path, options=options)
+                # driver = webdriver.Chrome(executable_path=driver_path, options=options)
+                driver = webdriver.Chrome(service=service, options=options)
                 self._driver = driver
+                self._driver.implicitly_wait(self.waittime)  # 避免模拟器运行慢获取不到元素
                 break
             except Exception as e:
                 cur_version = get_chrome_version(e.msg)
                 chrome_list = setup_dirver(cur_version, chrome_list)
-
 
     @property
     def driver(self):
@@ -179,6 +204,16 @@ class WebdriveChrome:
     def waittime(self):
         return self._waittime
 
-if __name__ == '__main__':
-    web = WebdriveChrome()
-    web.driver.get('https://www.zjzwfw.gov.cn/zjservice/front/index/page.do?webId=1')
+    def run_xpath(self, url: str, info: List[XpathActionInfo]):
+        """基于Xpath运行Web动作
+
+        Parameters
+        ----------
+        url:运行的url
+        info: XPath的运行动作对象列表
+        """
+        driver = self.driver
+        driver.get(url)
+        for t in info:
+            obj = driver.find_element(By.XPATH, t.xpath)
+            t.func(obj) if t.val is None else t.func(obj, t.val)
