@@ -2,9 +2,9 @@
 
 """
 作者:J.Hu
-日期:2022-10-27
+日期:2022-11-01
 内容:
-> 针对新版本selenum4.X进行了部分方法的更新
+> 针对新版本selenum4.X进行了部分方法的更新,支持By多类型的ActionInfo
 > 自动分析系统并下载匹配最新的驱动,免除了手动下载匹配驱动
 > 抽象化部分操作,通过简单的结构化配置即可实现脚本运行
 """
@@ -29,7 +29,6 @@ DRIVER_URL = 'https://registry.npmmirror.com/-/binary/chromedriver/'
 
 def get_chromedriver_type() -> str:
     """根据系统类型获取下载驱动
-
     Returns
     -------
     'chromedriver_mac64.zip': Mac Intel驱动
@@ -49,11 +48,9 @@ def get_chromedriver_type() -> str:
 
 def get_chromedriver_list(url: str) -> list:
     """获取可供下载的驱动版本
-
     Parameters
     ----------
     url:镜像驱动下载地址
-
     Returns
     -------
     {
@@ -91,11 +88,9 @@ def download_chrome_driver(url: str) -> None:
 
 def get_chrome_version(message: str) -> str:
     """从错误信息中寻找浏览器的版本信息
-
     Parameters
     ----------
     message:出错信息
-
     Returns
     -------
     返回版本号信息,如果没有获取到版本号信息,返回空
@@ -112,13 +107,11 @@ def get_chrome_version(message: str) -> str:
 
 def fit_chrome_version(cur_version: str, check_list: list, prefix_url: str = DRIVER_URL) -> str:
     """根据当前的版本,匹配下载版本. 匹配的下载版本号不大于当前版本号,且是最接近的一个版本号
-
     Parameters
     ----------
     cur_version:当前版本信息
     check_list:可供下载的版本列表
     prefix_url:前置通用url
-
     Returns
     -------
     返回一个供下载的版本url
@@ -151,13 +144,12 @@ def setup_dirver(cur_version: str, chrome_list: list):
     return chrome_list
 
 
-# 基于Xpath的Webdirve动作
-class XpathActionInfo:
-    def __init__(self, xpath, func, val):
-        self.xpath = xpath
+class ActionInfo:
+    def __init__(self,by,by_val,func,val):
+        self.by = by
+        self.by_val = by_val
         self.func = func
         self.val = val
-
 
 class WebdriveChrome:
     def __init__(self, driver_path=DRIVER_PATH):
@@ -204,16 +196,15 @@ class WebdriveChrome:
     def waittime(self):
         return self._waittime
 
-    def run_xpath(self, url: str, info: List[XpathActionInfo]):
-        """基于Xpath运行Web动作
-
+    def run(self, url: str, info: List[ActionInfo]):
+        """运行Web动作
         Parameters
         ----------
         url:运行的url
-        info: XPath的运行动作对象列表
+        info: 运行动作对象列表
         """
         driver = self.driver
         driver.get(url)
         for t in info:
-            obj = driver.find_element(By.XPATH, t.xpath)
+            obj = driver.find_element(t.by, t.by_val)
             t.func(obj) if t.val is None else t.func(obj, t.val)

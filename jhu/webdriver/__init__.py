@@ -1,1 +1,1 @@
-from .chrome import XpathActionInfo,WebdriveChrome
+from .chrome import ActionInfo,WebdriveChrome
