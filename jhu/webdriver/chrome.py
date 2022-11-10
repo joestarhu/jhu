@@ -2,8 +2,9 @@
 
 """
 作者:J.Hu
-日期:2022-11-01
+日期:2022-11-10
 内容:
+> 追加了experimental_option的初始化设定,运行自定义参数,默认加入不会自动关闭浏览器操作.
 > 针对新版本selenum4.X进行了部分方法的更新,支持By多类型的ActionInfo
 > 自动分析系统并下载匹配最新的驱动,免除了手动下载匹配驱动
 > 抽象化部分操作,通过简单的结构化配置即可实现脚本运行
@@ -152,7 +153,7 @@ class ActionInfo:
         self.val = val
 
 class WebdriveChrome:
-    def __init__(self, driver_path=DRIVER_PATH):
+    def __init__(self, driver_path=DRIVER_PATH,experimental_option:dict=None):
         """初始化Webdriver Chrome
         """
         options = webdriver.ChromeOptions()
@@ -163,8 +164,14 @@ class WebdriveChrome:
             'User-Agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.159 Safari/537.36')
 
         # 屏蔽chrome正受到自动测试软件的控制
-        options.add_experimental_option(
-            "excludeSwitches", ["enable-automation"])
+        options.add_experimental_option("excludeSwitches", ["enable-automation"])
+        #不自动关闭浏览器
+        options.add_experimental_option('detach', True)
+
+        # 自定义的追加相关experimental_option的设置
+        if experimental_option:
+            for k in experimental_option:
+                options.add_experimental_option(k,experimental_option[k])
 
         # 默认等待时间
         self._waittime = 5
