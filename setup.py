@@ -25,7 +25,7 @@ setup(
         'License :: OSI Approved :: MIT License',
         'Operating System :: MacOS',
         'Topic :: Software Development :: Libraries :: Python Modules',
-        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.11',
     ],
     install_requires=['requests', 'pydantic'],  # 依赖的包
     zip_safe=True
