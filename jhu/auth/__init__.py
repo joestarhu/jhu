@@ -1,1 +1,1 @@
-
+from .dingding import DingQR
