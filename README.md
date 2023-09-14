@@ -2,6 +2,10 @@
 > 这个是我自己编写的一个python工具库,简化或者自动化的帮助我做一些工作
 
 # ChangeLog
+## 2023-09-14
+### ==更新==webdriver
+- 从浏览器版本115开始,使用新的地址下载链接,请确保你的网络能够访问该地址 https://googlechromelabs.github.io/chrome-for-testing/
+
 ## 2023-03-06
 ### ==新增==钉钉扫码登录
 - 支持生成钉钉扫码登录的url
