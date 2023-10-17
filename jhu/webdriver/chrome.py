@@ -2,9 +2,9 @@
 
 """
 作者:J.Hu
-日期:2023-09-12
+日期:2023-10-17
 内容:
-> 修复更新了在win操作系统下不能运行的原因,主要是因为.exe后缀带来的文件匹配不到的原因
+> 修复更新了在win操作系统下不能运行的原因,主要是因为.exe后缀带来的文件匹配不到的原因,同时将无用的zip文件和文件夹目录删除
 > 追加了针对115版本以上chrome的驱动下载,请确保网络能够访问 https://googlechromelabs.github.io/chrome-for-testing/
 > 追加了experimental_option的初始化设定,运行自定义参数,默认加入不会自动关闭浏览器操作.
 > 针对新版本selenum4.X进行了部分方法的更新,支持By多类型的ActionInfo
@@ -12,10 +12,11 @@
 > 抽象化部分操作,通过简单的结构化配置即可实现脚本运行
 """
 from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.remote.webelement import WebElement
 from requests import session
-from enum import Enum
+from shutil import move as sh_move
 import json
 import zipfile
 import os
@@ -120,10 +121,13 @@ def download_chrome_driver(url: str, driver_name: str) -> None:
             if file_name == driver_name:
                 zf.extract(file, './')
 
-                # 判断是否是设定的标准路径,如果不是,则移动到标准路径
+                # 判断是否是设定的标准路径,如果不是,则移动到标准路径,并移除文件夹
                 if (file != driver_name):
-                    os.rename(file, driver_name)
+                    sh_move(file, driver_name)
+                    file_dirname = os.path.dirname(file)
+                    os.removedirs(file_dirname)
 
+    os.remove(f'./{zip_driver_name}')
     os.chmod(driver_name, 766)
 
 
@@ -225,7 +229,7 @@ def init_chrome_options(experimental_option: dict = None):
 
 
 class ActionInfo:
-    def __init__(self, by, by_val, func, val):
+    def __init__(self, by_val, func, val, by=By.XPATH):
         self.by = by
         self.by_val = by_val
         self.func = func
@@ -253,9 +257,6 @@ class WebdriveChrome:
             chrome_list = setup_dirver(
                 cur_version, chrome_list, plat_system, plat_machine, plat_bits, driver_name)
 
-        # 初始化Service服务
-        service = Service(executable_path=driver_path)
-
         # 初始化浏览器配置项
         options = init_chrome_options(experimental_option)
 
@@ -265,6 +266,8 @@ class WebdriveChrome:
         # 默认尝试3次.
         for _ in range(3):
             try:
+                # 初始化Service服务
+                service = Service(executable_path=driver_path)
                 driver = webdriver.Chrome(service=service, options=options)
                 driver.implicitly_wait(waittime)  # 避免模拟器运行慢获取不到元素
                 self.driver = driver
@@ -289,9 +292,19 @@ class WebdriveChrome:
 
 
 if __name__ == '__main__':
+
+    # 运行测试用例
+    url = 'https://space.bilibili.com/2136075?spm_id_from=333.1296.0.0'
+
+    # 登录Bilibili,点击为我充电按钮
+    info = [ActionInfo(
+        '//*[@id="page-index"]/div[2]/div[4]/div/div[1]', WebElement.click, None)]
+
     try:
         wb = WebdriveChrome()
-        wb.driver.close()
+        wb.run(url, info)
         print('太棒啦,webdriver成功运行')
     except Exception as e:
         print(f'啊哦,真糟糕,运行失败了{e}')
+    finally:
+        wb.driver.close()
