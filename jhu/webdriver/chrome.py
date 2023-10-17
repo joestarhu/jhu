@@ -4,6 +4,7 @@
 作者:J.Hu
 日期:2023-09-12
 内容:
+> 修复更新了在win操作系统下不能运行的原因,主要是因为.exe后缀带来的文件匹配不到的原因
 > 追加了针对115版本以上chrome的驱动下载,请确保网络能够访问 https://googlechromelabs.github.io/chrome-for-testing/
 > 追加了experimental_option的初始化设定,运行自定义参数,默认加入不会自动关闭浏览器操作.
 > 针对新版本selenum4.X进行了部分方法的更新,支持By多类型的ActionInfo
@@ -14,98 +15,90 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from requests import session
-from typing import List
+from enum import Enum
 import json
 import zipfile
 import os
 import platform
 
-
-# 环境变量设定
-DRIVER_NAME = 'chromedriver'
-DRIVER_PATH = './' + DRIVER_NAME
-
-# 淘宝镜像谷歌浏览器驱动下载地址
+# 淘宝镜像谷歌浏览器驱动下载地址(115版本之前的)
 DRIVER_URL = 'https://registry.npmmirror.com/-/binary/chromedriver/'
+
 # 115版本及以后用此链接进行下载
-DRIVER_URL_155 = 'https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/'
-DRIVER_URL_JSON = 'https://googlechromelabs.github.io/chrome-for-testing/known-good-versions-with-downloads.json'
+DRIVER_URL_115_PREFIX = 'https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/'
+DRIVER_URL_115 = 'https://googlechromelabs.github.io/chrome-for-testing/known-good-versions-with-downloads.json'
 
 
-def get_chromedriver_type() -> str:
-    """根据系统类型获取下载驱动
-    Returns
-    -------
-    'chromedriver_mac64.zip': Mac Intel驱动
-    'chromedriver_mac64_m1.zip': Mac M系列驱动
-    'chromedriver_linux64.zip': Linux驱动
-    'chromedriver_win32.zip': Windows驱动
+def get_driver_name(plat_sys: str) -> str:
+    """获取浏览器下载驱动地址
+    Parameters:
+        plat_sys: 系统名称
+    Returns:
+        驱动地址
     """
-    system_info = platform.system()
-    if system_info == 'Darwin':
-        # x86_64架构视为非M系列 M系列为ARM架构
-        return 'chromedriver_mac64.zip' if platform.machine() == 'x86_64' else 'chromedriver_mac64_m1.zip'
-    elif system_info == 'Linux':
-        return 'chromedriver_linux64.zip'
+    if plat_sys == 'Darwin':
+        return 'chromedriver'
+    elif plat_sys == 'Linux':
+        return 'chromedriver'
     else:
-        return 'chromedriver_win32.zip'
+        return 'chromedriver.exe'
 
 
-def get_chromedriver_type_115() -> str:
+def get_chromedriver_type(plat_sys: str, plat_machine: str, plat_bits: str, idx: int) -> str:
     """根据系统类型获取下载驱动
+    Parameters:
+        plat_sys: 系统名称
+        plat_machine: 系统架构
+        plat_bits: 系统位数
+        idx: 0代表使用115之前的版本,1代表使用115之后的版本
+    Returns:
+        下载驱动的zip名称
     """
-    system_info = platform.system()
-    if system_info == 'Darwin':
-        # x86_64架构视为非M系列 M系列为ARM架构
-        return 'mac-x64/chromedriver-mac-x64.zip' if platform.machine() == 'x86_64' else 'mac-arm64/chromedriver-mac-arm64.zip'
-    elif system_info == 'Linux':
-        return 'linux64/chromedriver-linux64.zip'
+    # 下载文件名(第一个为115之前的,第二个为115版本及以后得.)
+    mac_x64 = ['chromedriver_mac64.zip', 'mac-x64/chromedriver-mac-x64.zip']
+    mac_arm64 = ['chromedriver_mac64_m1.zip', 'mac-arm64/chrome-mac-arm64.zip']
+    linux64 = ['chromedriver_linux64.zip', 'linux64/chromedriver-linux64.zip']
+    win32 = ['chromedriver_win32.zip', 'win32/chromedriver-win32.zip']
+    win64 = ['chromedriver_win32.zip', 'win64/chromedriver-win64.zip']
+
+    if plat_sys == 'Darwin':
+        return mac_x64[idx] if plat_machine == 'x86_64' else mac_arm64[idx]
+    elif plat_sys == 'Linux':
+        return linux64[idx]
     else:
-        bits = platform.architecture()[0]
-        if bits == '32bit':
-            return 'win32/chromedriver-win32.zip'
-        else:
-            return 'win64/chromedriver-win64.zip'
+        return win32[idx] if plat_bits == '32bit' else win64[idx]
 
 
-def get_chromedriver_list(url: str = DRIVER_URL) -> list:
-    """获取可供下载的驱动版本
-    Parameters
-    ----------
-    url:镜像驱动下载地址
-    Returns
-    -------
-    {
-        name:下载的驱动版本号
-    }
+def get_chromedriver_list(idx: int = 0) -> list:
+    """获取谷歌驱动的下载链接
+    Parameters:
+        idx: 0代表使用115之前的版本,1代表使用115之后的版本
     """
+    url = [DRIVER_URL, DRIVER_URL_115]
+
     with session() as conn:
-        rsp = conn.get(url)
+        rsp = conn.get(url[idx])
         chrome_list = json.loads(rsp.text)
-    # 获取到的版本号为最后有一个/,舍弃掉,并且分割出版本数字,版本号中含有非数字的全都作为非版本数据处理掉,为后续版本比较处理,全部int化掉
-    return [[int(i) for i in val['name'][:-1].split('.')] for val in chrome_list if val['name'][0].isdigit()]
+
+    if idx == 0:
+        # 获取到的版本号为最后有一个/,舍弃掉,并且分割出版本数字,版本号中含有非数字的全都作为非版本数据处理掉,为后续版本比较处理,全部int化掉
+        result = [[int(i) for i in val['name'][:-1].split('.')]
+                  for val in chrome_list if val['name'][0].isdigit()]
+    else:
+        result = []
+        r_fn = result.append
+        for d in chrome_list['versions']:
+            r_fn(list(map(int, d['version'].split('.'))))
+    return result
 
 
-def get_chromedriver_list_115(url: str = DRIVER_URL_JSON) -> list:
-    with session() as conn:
-        rsp = conn.get(url)
-        chrome_list = json.loads(rsp.text)
-    # 获取到的版本号为最后有一个/,舍弃掉,并且分割出版本数字,版本号中含有非数字的全都作为非版本数据处理掉,为后续版本比较处理,全部int化掉
-
-    rsp = []
-    for d in chrome_list['versions']:
-        rsp.append(list(map(int, d['version'].split('.'))))
-    return rsp
-
-
-def download_chrome_driver(url: str) -> None:
+def download_chrome_driver(url: str, driver_name: str) -> None:
     """下载驱动文件并解压缩和设置权限
     Paramters
     ---------
     url:下载驱动的地址
     """
-    driver_name = DRIVER_NAME
-    zip_driver_name = driver_name + '.zip'
+    zip_driver_name = 'chromedriver.zip'
     with session() as conn:
         rsp = conn.get(url, stream=True)
     with open(zip_driver_name, 'wb') as f:
@@ -157,9 +150,9 @@ def fit_chrome_version(cur_version: str, check_list: list, prefix_url: str = DRI
     """根据当前的版本,匹配下载版本. 匹配的下载版本号不大于当前版本号,且是最接近的一个版本号
     Parameters
     ----------
-    cur_version:当前版本信息
-    check_list:可供下载的版本列表
-    prefix_url:前置通用url
+        cur_version:当前版本信息
+        check_list:可供下载的版本列表
+        prefix_url:前置通用url
     Returns
     -------
     返回一个供下载的版本url
@@ -183,23 +176,25 @@ def fit_chrome_version(cur_version: str, check_list: list, prefix_url: str = DRI
     return prefix_url + version_info + '/'
 
 
-def setup_dirver(cur_version: str, chrome_list: list):
-    url = DRIVER_URL
-    fn = get_chromedriver_type
-    chrome_list_fn = get_chromedriver_list
-
-    if cur_version != '':
-        if [int(i) for i in cur_version.split('.')][0] > 114:
-            url = DRIVER_URL_155
-            fn = get_chromedriver_type_115
-            chrome_list_fn = get_chromedriver_list_115
+def setup_dirver(cur_version: str, chrome_list: list, plat_sys: str, plat_machine: str, plat_bits: str, driver_name: str):
+    prefix_url = [DRIVER_URL, DRIVER_URL_115_PREFIX]
+    if cur_version:
+        # 如果当前版本大于等于115
+        if [int(i) for i in cur_version.split('.')][0] >= 115:
+            ver_idx = 1
+        else:
+            ver_idx = 0
+    else:
+        ver_idx = 0
+    download_type = get_chromedriver_type(
+        plat_sys, plat_machine, plat_bits, ver_idx)
 
     # 重新获取一次,因为不同版本的下载地址是不一样的.
-    chrome_list = chrome_list_fn()
+    chrome_list = get_chromedriver_list(ver_idx)
 
     download_url = fit_chrome_version(
-        cur_version, chrome_list, prefix_url=url) + fn()
-    download_chrome_driver(download_url)
+        cur_version, chrome_list, prefix_url=prefix_url[ver_idx]) + download_type
+    download_chrome_driver(download_url, driver_name)
     return chrome_list
 
 
@@ -238,42 +233,48 @@ class ActionInfo:
 
 
 class WebdriveChrome:
-    def __init__(self, driver_path=DRIVER_PATH, experimental_option: dict = None):
+    def __init__(self, experimental_option: dict = None):
         """初始化Webdriver Chrome
         """
+        # 浏览器当前版本
+        cur_version = ''
+        # 浏览器驱动下载列表
+        chrome_list = []
+
+        # 获取当前脚本的运行环境
+        plat_system = platform.system()
+        plat_machine = platform.machine()
+        plat_bits = platform.architecture()[0]
+
+        driver_name = get_driver_name(plat_system)
+        driver_path = f'./{driver_name}'
+
+        if not os.path.exists(driver_path):
+            chrome_list = setup_dirver(
+                cur_version, chrome_list, plat_system, plat_machine, plat_bits, driver_name)
+
+        # 初始化Service服务
+        service = Service(executable_path=driver_path)
+
         # 初始化浏览器配置项
         options = init_chrome_options(experimental_option)
 
         # 默认等待时间(单位:秒)
-        self._waittime = 5
-
-        cur_version = ''
-        chrome_list = []
-        if not os.path.exists(driver_path):
-            chrome_list = setup_dirver(cur_version, chrome_list)
-
-        service = Service(executable_path=driver_path)
+        waittime = 5
 
         # 默认尝试3次.
         for _ in range(3):
             try:
                 driver = webdriver.Chrome(service=service, options=options)
-                driver.implicitly_wait(self.waittime)  # 避免模拟器运行慢获取不到元素
-                self._driver = driver
+                driver.implicitly_wait(waittime)  # 避免模拟器运行慢获取不到元素
+                self.driver = driver
                 break
             except Exception as e:
                 cur_version = get_chrome_version(e.msg)
-                chrome_list = setup_dirver(cur_version, chrome_list)
+                chrome_list = setup_dirver(
+                    cur_version, chrome_list, plat_system, plat_machine, plat_bits, driver_name)
 
-    @property
-    def driver(self):
-        return self._driver
-
-    @property
-    def waittime(self):
-        return self._waittime
-
-    def run(self, url: str, info: List[ActionInfo]):
+    def run(self, url: str, info: list[ActionInfo]):
         """运行Web动作
         Parameters
         ----------
@@ -288,4 +289,9 @@ class WebdriveChrome:
 
 
 if __name__ == '__main__':
-    wb = WebdriveChrome()
+    try:
+        wb = WebdriveChrome()
+        wb.driver.close()
+        print('太棒啦,webdriver成功运行')
+    except Exception as e:
+        print(f'啊哦,真糟糕,运行失败了{e}')

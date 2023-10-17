@@ -11,7 +11,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='jhu',  # 包的名称
-    version='1.0.9',  # 包的版本,每次更新或升级包都需要更新它
+    version='1.0.10',  # 包的版本,每次更新或升级包都需要更新它
     description='jhu是一个工具包,简化或自动化的做一些任务',  # 包的描述
     author='J.Hu',  # 作者
     email='joestarhu@163.com',  # 作者邮箱
@@ -27,6 +27,6 @@ setup(
         'Topic :: Software Development :: Libraries :: Python Modules',
         'Programming Language :: Python :: 3.11',
     ],
-    install_requires=['requests', 'pydantic'],  # 依赖的包
+    install_requires=['requests', 'pydantic', 'selenium'],  # 依赖的包
     zip_safe=True
 )
