@@ -2,6 +2,11 @@
 > 这个是我自己编写的一个python工具库,简化或者自动化的帮助我做一些工作
 
 # ChangeLog
+## 2023-10-17
+### ==更新==webdriver
+- 追加了在windows环境下,驱动名为chromedirver.exe的设定,同时下载完成后移除不必要的文件,仅保留驱动文件
+
+
 ## 2023-10-08
 ### ==新增==WebHook
 - 支持发送dingding的webhook,支持text类型和link类型的快速构建和发送
