@@ -196,9 +196,11 @@ def setup_dirver(cur_version: str, chrome_list: list, plat_sys: str, plat_machin
     # 重新获取一次,因为不同版本的下载地址是不一样的.
     chrome_list = get_chromedriver_list(ver_idx)
 
+    print('开始匹配和下载驱动')
     download_url = fit_chrome_version(
         cur_version, chrome_list, prefix_url=prefix_url[ver_idx]) + download_type
     download_chrome_driver(download_url, driver_name)
+    print(f'匹配下载驱动完毕')
     return chrome_list
 
 
@@ -240,8 +242,8 @@ class WebdriveChrome:
     def __init__(self, experimental_option: dict = None):
         """初始化Webdriver Chrome
         """
-        # 浏览器当前版本
-        cur_version = ''
+        # 浏览器当前版本(默认浏览器版本为88.0.4324.27,低于该版本,可能造成无法正常运行)
+        cur_version = '88.0.4324.27'
         # 浏览器驱动下载列表
         chrome_list = []
 
@@ -249,6 +251,7 @@ class WebdriveChrome:
         plat_system = platform.system()
         plat_machine = platform.machine()
         plat_bits = platform.architecture()[0]
+        print(f'您的运行系统环境为:{plat_system},架构为:{plat_machine},位数为:{plat_bits}')
 
         driver_name = get_driver_name(plat_system)
         driver_path = f'./{driver_name}'
