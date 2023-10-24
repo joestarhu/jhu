@@ -1,1 +1,1 @@
-from .dingding import DingQR
+from .third_auth import ThridAuth, AuthType
