@@ -66,7 +66,7 @@ class ThridAuth:
         self.ak = ak
         self.sk = sk
 
-    def login_url_generate(self, redirect_url: str) -> str:
+    def login_url_generate(self, redirect_url: str, state: str = None) -> str:
         """生成三方扫码登录的url地址
 
         Parameters:
@@ -79,21 +79,23 @@ class ThridAuth:
         """
         match(self.auth_type):
             case AuthType.DINGDING:
+                state = state or 'JHU_DINGDING'
                 # 钉钉三方登录网页地址拼接
                 prefix_url = 'https://login.dingtalk.com/oauth2/challenge.htm'
                 data = dict(
                     redirect_uri=quote_plus(redirect_url),
                     client_id=self.ak,
-                    response_type='code', scope='openid', state='jhu', prompt='consent'
+                    response_type='code', scope='openid', state=state, prompt='consent'
                 )
             case AuthType.FEISHU:
                 # 飞书三方登录网页地址拼接
+                state = state or 'JHU_FEISHU'
                 prefix_url = 'https://open.feishu.cn/open-apis/authen/v1/authorize'
                 data = dict(
                     redirect_uri=quote_plus(redirect_url),
                     app_id=self.ak,
                     scope='contact:user.phone:readonly',
-                    state='feishu'
+                    state=state
                 )
             case _:
                 raise Exception('认证类型类型错误')
