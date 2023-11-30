@@ -2,6 +2,13 @@
 > 这个是我自己编写的一个python工具库,简化或者自动化的帮助我做一些工作
 
 # ChangeLog
+## 2023-11-30
+### ==移除==webdriver
+- DrissionPage具备了更强的能力,selenium不在使用,因此移除掉webdriver
+
+### ==新增==security
+- 追加了jwt和hash password的能力
+
 ## 2023-10-24
 ### ==更新==auth
 - 更新了auth,移除了钉钉,整合了钉钉和飞书的三方扫码登录
