@@ -30,7 +30,7 @@ class HashAPI:
 
 
 class JWTAPI:
-    def __init__(self,key:str,algorithm:str,expire_min:int) -> None:
+    def __init__(self,key:str,expire_min:int,algorithm:str='HS256') -> None:
         self.__key = key
         self.__algorithm = algorithm
         self.expire = expire_min
