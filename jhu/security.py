@@ -10,6 +10,11 @@ from jose import jwt
 
 class HashAPI:
     def __init__(self,key:str) -> None:
+       """Hash对象
+       
+       Args:
+        key:str,加密密钥
+       """
        self.__key = key
 
     @property
@@ -17,20 +22,34 @@ class HashAPI:
        return self.__key
     
     def hash_text(self,plain_text:str)->str:
+        """将明文哈希加密
+        """
         return hashpw(plain_text.encode(),gensalt()).decode()
 
     def decrypt(self,hash_text:str)->str:
+        """解密哈希文本
+        """
         cipher = AES.new(self.key.encode(),AES.MODE_ECB)
         enc_text = b64decode(hash_text)
         dec_text = unpad(cipher.decrypt(enc_text),AES.block_size).decode()
         return dec_text
 
     def verifty(self,plain_text:str,hash_text:str)->bool:
+        """验证明文文本和哈希加密文本内容是否一致
+        """
         return checkpw(plain_text.encode(),hash_text.encode())
 
 
 class JWTAPI:
     def __init__(self,key:str,expire_min:int,algorithm:str='HS256') -> None:
+        """JWT对象
+
+        Args:
+            key:str,密钥
+            expire_min:int,token的有效期(分钟)
+            algorithm:str,加密算法
+
+        """
         self.__key = key
         self.__algorithm = algorithm
         self.expire = expire_min
@@ -44,9 +63,13 @@ class JWTAPI:
         return self.__algorithm
     
     def encode(self,**kw)-> str:
+        """编码JWT的token
+        """
         expire = datetime.utcnow() + timedelta(minutes=self.expire)
         payload = dict(**kw,exp=expire)
         return jwt.encode(payload,key=self.key,algorithm=self.algorithm)
 
     def decode(self,token:str)->dict:
+        """解码JWT的token
+        """
         return jwt.decode(token=token,key=self.key,algorithms=self.algorithm)
