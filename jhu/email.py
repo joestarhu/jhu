@@ -123,15 +123,3 @@ class EmailSender:
         """关闭smtp链接
         """     
         self.smtp.close()
-
-
-SERVER = 'smtp.163.com'  # 服务器地址
-USER = 'cantahu@163.com'  # 账号
-PWD = 'jhqwe321*'  # 密码
-e = EmailSender(SERVER)
-e.login(USER,PWD,'胡健')
-e.send(title='测试邮件',content='测试邮件内容3',attach_list=['/Users/hujian/Downloads/20231213152543.jpg','/Users/hujian/Downloads/一田一码.rp'],
-       to=['hujian@morewin.tech','cantahu@163.com'],cc=['hujian@morewin.tech','joestarhu@163.com'],bcc=['hujian@morewin.tech'])
-
-
-
