@@ -123,3 +123,14 @@ class EmailSender:
         """关闭smtp链接
         """     
         self.smtp.close()
+
+
+
+if __name__ == '__main__':
+    host='host'
+    e = EmailSender(host)
+    acct = 'a@a.com'
+    passwd='passwd'
+    nickname='joestarhu'
+    e.login(acct,passwd,nickname)
+    e.send(title='title',content='content',to=['a@a.com','b@b.com'])

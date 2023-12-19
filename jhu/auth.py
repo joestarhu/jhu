@@ -56,11 +56,10 @@ class ThridAuth:
     def __init__(self, ak: str, sk: str, auth_type: AuthType) -> None:
         """三方扫码登录初始化
 
-        Parameters:
-        ------------
-        auth_type:应用类型,当前支持 钉钉:AuthType.DINGDING,飞书:AuthType.FEISHU
-        ak:应用的appkey
-        sk:应用的secretkey
+        Args:
+            ak:str,应用的appkey
+            sk:str,应用的secretkey
+            auth_type:AuthType,应用类型,当前支持 钉钉:AuthType.DINGDING,飞书:AuthType.FEISHU
         """
         self.auth_type = auth_type
         self.ak = ak
@@ -69,13 +68,12 @@ class ThridAuth:
     def login_url_generate(self, redirect_url: str, state: str = None) -> str:
         """生成三方扫码登录的url地址
 
-        Parameters:
-        -----------
-        redirect_url: 扫码通过后,回调的地址
+        Args:
+            redirect_url:str,扫码通过后,回调的地址
+            state:str,生成地址用的state
 
         Return:
-        -------
-        url:三方扫码登录的url地址
+            三方扫码登录的url地址:str
         """
         match(self.auth_type):
             case AuthType.DINGDING:
@@ -107,13 +105,11 @@ class ThridAuth:
     def get_user_info(self, auth_code: str) -> dict:
         """获取三方扫码得到的用户信息
 
-        Parameters:
-        ------------
-        auth_code:三方登录连接返回的auth_code
+        Args:
+            auth_code:str,三方登录连接返回的auth_code
 
         Return:
-        --------
-        results:用户的json信息
+            用户的json信息:dict
         """
         match(self.auth_type):
             case AuthType.DINGDING:
