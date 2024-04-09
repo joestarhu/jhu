@@ -5,7 +5,13 @@
 1. 先设置一个setup文件
 2. 运行setup.py sdist
 3. 然后会得到一个dist文件, 这个时候就可用pip install dist/xxxxx 来安装文件了
-4. twine upload dist/* 可上传安装,需要输入pypi的用户名和密码
+4. 到PYPI上创建一个API Token(现在不支持user/passwd模型上传package了)
+5. 在本地的创建一个$HOME/.pypirc文件
+    其中:
+    [pypi]
+    username = __token__
+    password = # 这里改成放申请下来的token
+6. twine upload dist/* 可上传安装,需要输入pypi的用户名和密码
 """
 from setuptools import setup, find_packages
 
