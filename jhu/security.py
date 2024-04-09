@@ -2,12 +2,35 @@
 安全模块工具
 """
 from datetime import datetime,timedelta
+from zoneinfo import ZoneInfo
 from bcrypt import checkpw,gensalt,hashpw
 from base64 import b64decode
 from Cryptodome.Cipher import AES
 from Cryptodome.Util.Padding import unpad
+from cryptography.fernet import Fernet
 from jose import jwt
 
+class FernetAPI:
+    def __init__(self,key:str) -> None:
+        """key可通过 Fernet.generate_key() 生成
+        """
+        self.__fernet = Fernet(key)
+    
+    @property
+    def fernet(self):
+        return self.__fernet
+    
+    def encrypt(self,plain_text:str)->str:
+        """加密
+        """
+        return self.fernet.encrypt(plain_text.encode()).decode()
+        
+    def decrypt(self,encrypted_text: str)->str:
+        """解密
+        """
+        return self.fernet.decrypt(encrypted_text).decode()
+
+        
 class HashAPI:
     def __init__(self,key:str) -> None:
        """Hash对象
@@ -65,7 +88,8 @@ class JWTAPI:
     def encode(self,**kw)-> str:
         """编码JWT的token
         """
-        expire = datetime.utcnow() + timedelta(minutes=self.expire)
+        # expire = datetime.utcnow() + timedelta(minutes=self.expire)
+        expire = datetime.now(ZoneInfo("UTC")) + timedelta(minutes=self.expire)
         payload = dict(**kw,exp=expire)
         return jwt.encode(payload,key=self.key,algorithm=self.algorithm)
 

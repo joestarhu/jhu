@@ -11,7 +11,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='jhu',  # 包的名称
-    version='1.3.0',  # 包的版本,每次更新或升级包都需要更新它
+    version='1.4.0',  # 包的版本,每次更新或升级包都需要更新它
     description='jhu是一个工具包,简化或自动化的做一些任务',  # 包的描述
     author='J.Hu',  # 作者
     email='joestarhu@163.com',  # 作者邮箱
@@ -30,6 +30,7 @@ setup(
         'requests',         # auth webhook
         'python-jose',      # security.py
         'bcrypt',           # security.py
+        'cryptography',     # security.py
         'pycryptodomex',    # security.py
         ],  # 依赖的包
     zip_safe=True
