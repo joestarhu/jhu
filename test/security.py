@@ -2,9 +2,7 @@
 """
 测试
 """
-
-from cryptography.fernet import Fernet
-from jhu.security import HashAPI,JWTAPI,FernetAPI
+from jhu.security import HashAPI,JWTAPI,AESAPI
 
 if __name__ == '__main__':
     KEY = '12345678'
@@ -14,6 +12,6 @@ if __name__ == '__main__':
 
     api_jwt = JWTAPI(KEY,1)
     print(api_jwt.decode(api_jwt.encode(a=1)))
-    api_fernet = FernetAPI(Fernet.generate_key())    
-    print(api_fernet.decrypt(api_fernet.encrypt('qwe321')))
+    api_aes = AESAPI('1234567890123456')    
+    print(api_aes.decrypt(api_aes.encrypt('qwe321')))
 

@@ -4,32 +4,44 @@
 from datetime import datetime,timedelta
 from zoneinfo import ZoneInfo
 from bcrypt import checkpw,gensalt,hashpw
-from base64 import b64decode
+from base64 import b64decode,b64encode
 from Cryptodome.Cipher import AES
-from Cryptodome.Util.Padding import unpad
-from cryptography.fernet import Fernet
+from Cryptodome.Util.Padding import pad,unpad
 from jose import jwt
 
-class FernetAPI:
+
+class AESAPI:
     def __init__(self,key:str) -> None:
-        """key可通过 Fernet.generate_key() 生成
-        """
-        self.__fernet = Fernet(key)
+        # ECB模式,加密结果固定
+        self.cipher = AES.new(key.encode(),AES.MODE_ECB)
     
-    @property
-    def fernet(self):
-        return self.__fernet
-    
-    def encrypt(self,plain_text:str)->str:
+    def encrypt(self,plain_text:str):
         """加密
         """
-        return self.fernet.encrypt(plain_text.encode()).decode()
-        
-    def decrypt(self,encrypted_text: str)->str:
+
+        # 对明文进行补全至块大小的填充
+        padded_text = pad(plain_text.encode(), AES.block_size)
+
+        # 加密
+        ciphertext = self.cipher.encrypt(padded_text)
+
+        # 返回Base64编码的密文
+        return b64encode(ciphertext).decode()
+    
+    def decrypt(self,encrypted_value:str):
         """解密
         """
-        return self.fernet.decrypt(encrypted_text).decode()
 
+        # 将Base64编码的密文解码为字节
+        ciphertext = b64decode(encrypted_value.encode())
+
+        # 解密
+        decrypted_text = unpad(self.cipher.decrypt(ciphertext), AES.block_size)
+
+        # 将解密后的字节串转换回字符串
+        original_message = decrypted_text.decode()
+
+        return original_message
         
 class HashAPI:
     def __init__(self,key:str) -> None:
