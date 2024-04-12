@@ -13,10 +13,14 @@ from jose import jwt
 class AESAPI:
     def __init__(self,key:str) -> None:
         # ECB模式,加密结果固定
-        self.cipher = AES.new(key.encode(),AES.MODE_ECB)
+        self._cipher = AES.new(key.encode(),AES.MODE_ECB)
     
-    def encrypt(self,plain_text:str):
-        """加密
+    @property
+    def cipher(self):
+        return self._cipher
+    
+    def encrypt(self,plain_text:str)->str:
+        """加密:pad->encrypt->b64encode
         """
 
         # 对明文进行补全至块大小的填充
@@ -28,49 +32,28 @@ class AESAPI:
         # 返回Base64编码的密文
         return b64encode(ciphertext).decode()
     
-    def decrypt(self,encrypted_value:str):
-        """解密
+    def decrypt(self,encrypted_value:str)->str:
+        """解密:b64decode->decrypt->unpad
         """
 
         # 将Base64编码的密文解码为字节
-        ciphertext = b64decode(encrypted_value.encode())
+        ciphertext = b64decode(encrypted_value)
 
         # 解密
         decrypted_text = unpad(self.cipher.decrypt(ciphertext), AES.block_size)
 
         # 将解密后的字节串转换回字符串
-        original_message = decrypted_text.decode()
+        return decrypted_text.decode()
 
-        return original_message
-        
+
 class HashAPI:
-    def __init__(self,key:str) -> None:
-       """Hash对象
-       
-       Args:
-        key:str,加密密钥
-       """
-       self.__key = key
-
-    @property
-    def key(self):
-       return self.__key
-    
-    def hash_text(self,plain_text:str)->str:
-        """将明文哈希加密
+    def hash(self,plain_text:str)->str:
+        """明文哈希加密
         """
         return hashpw(plain_text.encode(),gensalt()).decode()
-
-    def decrypt(self,hash_text:str)->str:
-        """解密哈希文本
-        """
-        cipher = AES.new(self.key.encode(),AES.MODE_ECB)
-        enc_text = b64decode(hash_text)
-        dec_text = unpad(cipher.decrypt(enc_text),AES.block_size).decode()
-        return dec_text
-
-    def verifty(self,plain_text:str,hash_text:str)->bool:
-        """验证明文文本和哈希加密文本内容是否一致
+    
+    def verify(self,plain_text:str,hash_text:str)->bool:
+        """验证明文和密文的内容是否一致
         """
         return checkpw(plain_text.encode(),hash_text.encode())
 

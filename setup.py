@@ -17,7 +17,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='jhu',  # 包的名称
-    version='1.4.1',  # 包的版本,每次更新或升级包都需要更新它
+    version='1.4.2',  # 包的版本,每次更新或升级包都需要更新它
     description='jhu是一个工具包,简化或自动化的做一些任务',  # 包的描述
     author='J.Hu',  # 作者
     email='joestarhu@163.com',  # 作者邮箱
