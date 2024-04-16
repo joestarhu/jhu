@@ -8,7 +8,7 @@ from requests import post, get
 
 
 class AuthType(Enum):
-    DINGDING = 0
+    DINGTALK = 0
     FEISHU = 1
 
 
@@ -59,7 +59,7 @@ class ThridAuth:
         Args:
             ak:str,应用的appkey
             sk:str,应用的secretkey
-            auth_type:AuthType,应用类型,当前支持 钉钉:AuthType.DINGDING,飞书:AuthType.FEISHU
+            auth_type:AuthType,应用类型,当前支持 钉钉:AuthType.DINGTALK,飞书:AuthType.FEISHU
         """
         self.auth_type = auth_type
         self.ak = ak
@@ -76,8 +76,8 @@ class ThridAuth:
             三方扫码登录的url地址:str
         """
         match(self.auth_type):
-            case AuthType.DINGDING:
-                state = state or 'JHU_DINGDING'
+            case AuthType.DINGTALK:
+                state = state or 'JHU_DINGTALK'
                 # 钉钉三方登录网页地址拼接
                 prefix_url = 'https://login.dingtalk.com/oauth2/challenge.htm'
                 data = dict(
@@ -112,7 +112,7 @@ class ThridAuth:
             用户的json信息:dict
         """
         match(self.auth_type):
-            case AuthType.DINGDING:
+            case AuthType.DINGTALK:
                 result = dingding_user_info_get(self.ak, self.sk, auth_code)
             case AuthType.FEISHU:
                 result = feishu_user_info_get(self.ak, self.sk, auth_code)
@@ -124,7 +124,7 @@ class ThridAuth:
 if __name__ == '__main__':
     ding_ak = 'ding_ak'
     ding_sk = 'ding_sk'
-    d = ThridAuth(ding_ak, ding_sk, AuthType.DINGDING)
+    d = ThridAuth(ding_ak, ding_sk, AuthType.DINGTALK)
     d.login_url_generate('http://localhost:9000/')
     # 这里的code从redirect_url返回的code中获取
     d.get_user_info('74f4f8d7dcdc3942ac11ef963f8fc76d')
