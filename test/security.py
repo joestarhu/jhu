@@ -12,4 +12,3 @@ if __name__ == '__main__':
     print(api_jwt.decode(api_jwt.encode(a=1)))
     api_aes = AESAPI('1234567890123456')    
     print(api_aes.decrypt(api_aes.encrypt('qwe321')))
-

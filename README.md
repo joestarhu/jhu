@@ -2,6 +2,14 @@
 > 这个是我自己编写的一个python工具库,简化或者自动化的帮助我做一些工作
 
 # ChangeLog
+## V1.5.0(2024-04-16)
+### data.py
+- 新增orm模块
+
+### auth.py
+- 修改了参数名字,DINGDING->DINGTALK
+
+
 ## V1.4.2(2024-04-12)
 ### security.py
 - 整合了HashAPI和AESAPI的解密功能
