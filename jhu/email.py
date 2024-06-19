@@ -24,7 +24,7 @@ from email.header import Header
 
 
 class EmailSender:
-    def __init__(self,host:str,port:int=465,ssl:bool=True,timeout:int=10,encode:str='utf-8',mail_type:str='html',attach_type:str='base64')->None:
+    def __init__(self, host: str, port: int = 465, ssl: bool = True, timeout: int = 10, encode: str = "utf-8", mail_type: str = "html", attach_type: str = "base64") -> None:
         """Email对象
 
         Args:
@@ -38,24 +38,23 @@ class EmailSender:
         """
         # 根据SSL确定SMTP的类型
         smtpfunc = SMTP_SSL if ssl else SMTP
-        self.__smtp = smtpfunc(host,port,timeout=timeout)
+        self.__smtp = smtpfunc(host, port, timeout=timeout)
 
-        self.encode=encode
-        self.mail_type=mail_type
-        self.attach_type=attach_type
+        self.encode = encode
+        self.mail_type = mail_type
+        self.attach_type = attach_type
 
         # 初始化to,cc,bcc对象
 
     @property
     def smtp(self):
         return self.__smtp
-    
 
     @property
     def sender(self):
         return self.__sender
-    
-    def login(self,acct:str,passwd:str,nickname:str=None) ->None:
+
+    def login(self, acct: str, passwd: str, nickname: str = None) -> None:
         """登录SMTP服务器
 
         Args:
@@ -63,14 +62,13 @@ class EmailSender:
             passwd:str,密码
             nickname:str,昵称
         """
-        self.smtp.login(acct,passwd)
+        self.smtp.login(acct, passwd)
         if not nickname:
             nickname = acct
-        self.__sender = formataddr([nickname,acct],self.encode)
+        self.__sender = formataddr([nickname, acct], self.encode)
         self.acct = acct
-        
 
-    def send(self,title:str,content:str,attach_list:list[str]=[],to:list[str]=None,cc:list[str]=None,bcc:list[str]=None)->None:
+    def send(self, title: str, content: str, attach_list: list[str] = [], to: list[str] = None, cc: list[str] = None, bcc: list[str] = None) -> None:
         """发送邮件
 
         Args:
@@ -84,53 +82,53 @@ class EmailSender:
         mime = MIMEMultipart()
 
         # 设置邮件标题和发件人
-        mime['Subject'] = Header(title,self.encode)
-        mime['From'] = self.sender
+        mime["Subject"] = Header(title, self.encode)
+        mime["From"] = self.sender
 
         # 设置收件人信息 to,cc,bcc
         receive_lst = []
-        rcpt_to = dict(label='To',value=to)
-        rcpt_cc = dict(label='Cc',value=cc)
-        rcpt_bcc = dict(label='Bcc',value=bcc)
-        
-        for val in [rcpt_to,rcpt_cc,rcpt_bcc]:
+        rcpt_to = dict(label="To", value=to)
+        rcpt_cc = dict(label="Cc", value=cc)
+        rcpt_bcc = dict(label="Bcc", value=bcc)
+
+        for val in [rcpt_to, rcpt_cc, rcpt_bcc]:
             # 没有设置相关的收件人信息
-            rcpt_type = val['label']
-            rcpt_value = val['value']
+            rcpt_type = val["label"]
+            rcpt_value = val["value"]
 
             if not rcpt_value:
                 continue
             receive_lst.extend(rcpt_value)
-            mime[rcpt_type] = ','.join([formataddr([None, mail],self.encode) for mail in rcpt_value])
+            mime[rcpt_type] = ','.join(
+                [formataddr([None, mail], self.encode) for mail in rcpt_value])
 
         # 正文内容设置
         mime.attach(MIMEText(content, self.mail_type, self.encode))
 
         # 附件内容设置
         for idx, val in enumerate(attach_list):
-            att = MIMEText(open(val,'rb').read(),self.mail_type,self.encode)
-            att.add_header('Content-ID', str(idx))
-            att.add_header('Content-Type', 'application/octet-stream')
+            att = MIMEText(open(val, "rb").read(), self.mail_type, self.encode)
+            att.add_header("Content-ID", str(idx))
+            att.add_header("Content-Type", "application/octet-stream")
             att_name = val.split('/')[-1]
-            att.add_header("Content-Disposition", 'attachment',filename=(self.encode, '', att_name))
+            att.add_header("Content-Disposition", "attachment",
+                           filename=(self.encode, '', att_name))
             mime.attach(att)
 
         # 发送邮件
-        self.smtp.sendmail(self.acct,receive_lst,mime.as_string())
+        self.smtp.sendmail(self.acct, receive_lst, mime.as_string())
 
-    
     def close(self):
         """关闭smtp链接
-        """     
+        """
         self.smtp.close()
 
 
-
-if __name__ == '__main__':
-    host='host'
+if __name__ == "__main__":
+    host = "host"
     e = EmailSender(host)
-    acct = 'a@a.com'
-    passwd='passwd'
-    nickname='joestarhu'
-    e.login(acct,passwd,nickname)
-    e.send(title='title',content='content',to=['a@a.com','b@b.com'])
+    acct = "a@a.com"
+    passwd = "passwd"
+    nickname = "joestarhu"
+    e.login(acct, passwd, nickname)
+    e.send(title="title", content="content", to=["a@a.com", "b@b.com"])

@@ -14,13 +14,14 @@ from requests import session
 from time import time
 from urllib.parse import quote_plus
 
-class WebHookType(int,Enum):
-    DINGTALK=0
-    WECOM=1
+
+class WebHookType(int, Enum):
+    DINGTALK = 0
+    WECOM = 1
 
 
 class WebHook:
-    def __init__(self,webhook:WebHookType,url:str,sk:str = None) -> None:
+    def __init__(self, webhook: WebHookType, url: str, sk: str = None) -> None:
         """Webhook对象
 
         Args:
@@ -39,12 +40,12 @@ class WebHook:
     @property
     def url(self):
         return self.__url
-    
+
     @property
     def sk(self):
         return self.__sk
 
-    def text(self,content,phone:list[str]=None,id:list[str]=None,all:bool=False)->dict:
+    def text(self, content: str, phone: list[str] = None, id: list[str] = None, all: bool = False) -> dict:
         """text类型,支持钉钉和企微
 
         Args:
@@ -53,20 +54,20 @@ class WebHook:
             id:list[str],需要@的用户ID,比如['id001', 'id002']
             all:bool,是否@ALL, 仅钉钉有效,企微请在id或phone里用'@all'来表示
         """
-        result = dict(msgtype='text')
-        text=dict(content=content)
+        result = dict(msgtype="text")
+        text = dict(content=content)
 
         match(self.webhook):
             case WebHookType.DINGTALK:
-                at = dict(atMobiles=phone,isAtAll=all,atUserIds=id)
-                result['at'] = at
+                at = dict(atMobiles=phone, isAtAll=all, atUserIds=id)
+                result["at"] = at
             case WebHookType.WECOM:
-                text['mentioned_list']=id
-                text['mentioned_mobile_list']=phone
-        result['text']=text
+                text["mentioned_list"] = id
+                text["mentioned_mobile_list"] = phone
+        result["text"] = text
         return result
 
-    def link(self,title:str,text:str,url:str,pic:str='')->dict:
+    def link(self, title: str, text: str, url: str, pic: str = "") -> dict:
         """link类型,仅支持钉钉
 
         Args:
@@ -75,30 +76,30 @@ class WebHook:
             url:str,点击消息跳转URL
             pic:str,图片URL
         """
-        result = dict(msgtype='link')
-        link = dict(title=title,text=text,messageUrl=url,picUrl=pic)
-        result['link']=link
+        result = dict(msgtype="link")
+        link = dict(title=title, text=text, messageUrl=url, picUrl=pic)
+        result["link"] = link
         return result
 
-    def markdown(self,text:str,title:str='')->dict:
+    def markdown(self, text: str, title: str = "") -> dict:
         """markdown类型,支持钉钉和企微
 
         Args:
             text:str,markdown内容
             title:str,markdown标题,仅钉钉需要填写
         """
-        result = dict(msgtype='markdown')
+        result = dict(msgtype="markdown")
 
         match(self.webhook):
             case WebHookType.DINGTALK:
-                markdown=dict(text=text,title=title)
+                markdown = dict(text=text, title=title)
             case WebHookType.WECOM:
-                markdown=dict(content=text)
-        
-        result['markdown']=markdown
+                markdown = dict(content=text)
+
+        result["markdown"] = markdown
         return result
 
-    def send(self,data:dict)->None:
+    def send(self, data: dict) -> None:
         """发送webhook消息
 
         Args:
@@ -111,33 +112,34 @@ class WebHook:
             case WebHookType.DINGTALK:
                 # 钉钉的处理
                 if sk:
-                    sk_enc = sk.encode('utf-8')
+                    sk_enc = sk.encode()
                     timestamp = str(round(time()*1000))
-                    sign_str = f'{timestamp}\n{sk}'
-                    sign_str_enc = sign_str.encode('utf-8')
+                    sign_str = f"{timestamp}\n{sk}"
+                    sign_str_enc = sign_str.encode()
                     hmac_code = hmac_new(sk_enc, sign_str_enc,
-                                 digestmod=sha256).digest()
+                                         digestmod=sha256).digest()
                     sign = quote_plus(b64encode(hmac_code))
-                    url = f'{url}&timestamp={timestamp}&sign={sign}'
+                    url = f"{url}&timestamp={timestamp}&sign={sign}"
 
         # 消息发送
         with session() as s:
-            result = s.post(url,json=data)
+            result = s.post(url, json=data)
 
         rsp = result.json()
-        if rsp['errcode'] != 0:
-            raise Exception(rsp['errmsg'])
+        if rsp["errcode"] != 0:
+            raise Exception(rsp["errmsg"])
 
-if __name__ == '__main__':
-    dt = WebHook(WebHookType.DINGTALK,'url','sk')
 
-    data = dt.text('钉钉测试内容',phone=['151****9832'])
-    data = dt.link(title='百度',text='点我可以打开baidu的地址',url='https://www.baidu.com')
-    data = dt.markdown('# 这是markdown的内容',title='markdown文本')
+if __name__ == "__main__":
+    dt = WebHook(WebHookType.DINGTALK, "url", "sk")
+
+    data = dt.text("钉钉测试内容", phone=["151****9832"])
+    data = dt.link(title="百度", text="点我可以打开baidu的地址",
+                   url="https://www.baidu.com")
+    data = dt.markdown("# 这是markdown的内容", title="markdown文本")
     dt.send(data)
 
-
-    wb =  WebHook(WebHookType.WECOM,'url')
-    data = wb.text('微信测试内容',phone=['@all'])
-    data = wb.markdown('# 这是markdown的内容')
+    wb = WebHook(WebHookType.WECOM, "url")
+    data = wb.text("微信测试内容", phone=["@all"])
+    data = wb.markdown("# 这是markdown的内容")
     wb.send(data)

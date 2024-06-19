@@ -16,28 +16,44 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='jhu',  # 包的名称
-    version='1.5.0',  # 包的版本,每次更新或升级包都需要更新它
-    description='jhu是一个工具包,简化或自动化的做一些任务',  # 包的描述
-    author='J.Hu',  # 作者
-    email='joestarhu@163.com',  # 作者邮箱
-    url='https://github.com/joestarhu/jhu',  # 项目地址
+    # 包的名称
+    name="jhu",
+    # 包的版本,每次更新或升级包都需要更新它
+    version="1.5.1",
+    # 描述
+    description="jhu是一个工具包,简化或自动化的做一些任务",
+    # 作者
+    author="J.Hu",
+    # 作者邮箱
+    email="joestarhu@163.com",
+    # github
+    url="https://github.com/joestarhu/jhu",
+
     packages=find_packages(
-        exclude=['test', 'examples', 'script', 'tutorials']),   # 包内不需要引用的文件
+        # 包内不需要引用的文件
+        exclude=["test", "examples", "script", "tutorials"],
+    ),
+
     classifiers=[
         "Environment :: Web Environment",
-        'Intended Audience :: Developers',
-        'License :: OSI Approved :: MIT License',
-        'Operating System :: MacOS',
-        'Topic :: Software Development :: Libraries :: Python Modules',
-        'Programming Language :: Python :: 3.12',
+        "License :: OSI Approved :: MIT License",
+        "Operating System :: MacOS",
+        "Topic :: Software Development :: Libraries :: Python Modules",
+        "Programming Language :: Python :: 3.12"
     ],
+
+    # 依赖的包
     install_requires=[
-        'requests',         # auth webhook
-        'python-jose',      # security.py
-        'bcrypt',           # security.py
-        'pycryptodomex',    # security.py
-        'sqlalchemy',       # data.py
-        ],  # 依赖的包
+        # auth.py ,webhook.py
+        "requests",
+        # security.py
+        "python-jose",
+        # security.py
+        "bcrypt",
+        # security.py
+        "pycryptodomex",
+        # orm.py
+        "sqlalchemy",
+    ],
     zip_safe=True
 )
