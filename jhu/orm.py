@@ -1,11 +1,18 @@
 from datetime import datetime
 from dataclasses import dataclass
 from math import ceil
-from typing import List, Callable
+from typing import Callable
 from urllib.parse import quote_plus
 
-from sqlalchemy import func, Select, MappingResult
+from sqlalchemy import func, select, Select, MappingResult
 from sqlalchemy.orm.session import Session
+from sqlalchemy.sql.elements import BinaryExpression
+
+
+@dataclass
+class ORMCheckRule:
+    errcode: int
+    condition: BinaryExpression
 
 
 @dataclass
@@ -80,18 +87,24 @@ class ORM:
         return db.execute(stmt).mappings()
 
     @staticmethod
-    def all(db: Session, stmt: Select, format_rules: list[ORMFormatRule] = []) -> List[dict]:
+    def all(db: Session, stmt: Select, format_rules: list[ORMFormatRule] = []) -> list[dict]:
         """获取所有数据
         """
-        ds = db.execute(stmt).mappings()
-        return [dict(**data) for data in ds]
+        ds = ORM.mapping(db, stmt)
+        result = [format_filed(dict(**one), format_rules) for one in ds]
+        return result
 
     @staticmethod
     def one(db: Session, stmt: Select, format_rules: list[ORMFormatRule] = []) -> dict | None:
         """获取第一行数据
         """
-        ds = ORM.all(db, stmt)
-        return ds[0] if ds else None
+        try:
+            one = next(ORM.mapping(db, stmt))
+            data = format_filed(dict(**one), format_rules)
+        except StopIteration:
+            return None
+
+        return data
 
     @staticmethod
     def counts(db: Session, stmt: Select) -> int:
@@ -129,3 +142,26 @@ class ORM:
         data = dict(records=records, pagination=pagination)
 
         return data
+
+    @staticmethod
+    def check(db: Session, rules: list[ORMCheckRule], except_expression: BinaryExpression = None) -> bool:
+        """规则判断
+
+        Args:
+            db: 数据库会话
+            rules: 检测规则
+            expression: 例外表达式(比如,修改的时候不判断本条数据)
+
+        Return:
+            None:检测通过
+            int:检测未通过,异常代码
+        """
+        base_stmt = select(1)
+
+        if except_expression is not None:
+            base_stmt = base_stmt.where(except_expression)
+
+        for rule in rules:
+            stmt = base_stmt.where(rule.condition)
+            if ORM.counts(db, stmt) > 0:
+                return rule.errcode
