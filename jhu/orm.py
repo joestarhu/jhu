@@ -11,7 +11,7 @@ from sqlalchemy.sql.elements import BinaryExpression
 
 @dataclass
 class ORMCheckRule:
-    errcode: int
+    errcode: str | int
     condition: BinaryExpression
 
 
@@ -144,7 +144,7 @@ class ORM:
         return data
 
     @staticmethod
-    def check(db: Session, rules: list[ORMCheckRule], except_expression: BinaryExpression = None) -> bool:
+    def check(db: Session, rules: list[ORMCheckRule], except_expression: BinaryExpression = None) -> str | int | None:
         """规则判断
 
         Args:
@@ -154,7 +154,7 @@ class ORM:
 
         Return:
             None:检测通过
-            int:检测未通过,异常代码
+            str | int:检测未通过,异常代码
         """
         base_stmt = select(1)
 
