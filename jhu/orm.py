@@ -4,32 +4,41 @@ from math import ceil
 from typing import Callable
 from urllib.parse import quote_plus
 
-from sqlalchemy import func, select, Select, MappingResult
+from sqlalchemy import BigInteger, DateTime, func, select, Select, MappingResult
+from sqlalchemy.orm import DeclarativeBase, Mapped as M, mapped_column as mc
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.elements import BinaryExpression
 
 
 @dataclass
 class ORMCheckRule:
+    """规则检验"""
     errcode: str | int
     condition: BinaryExpression
 
 
 @dataclass
 class ORMFormatRule:
+    """格式化"""
     filed: str
     format: Callable
 
 
+class ModelBase(DeclarativeBase):
+    id: M[int] = mc(BigInteger, primary_key=True, comment="ID")
+    create_dt: M[datetime] = mc(DateTime, comment="数据创建时间")
+    update_dt: M[datetime] = mc(DateTime, comment="数据更新时间")
+    create_id: M[int] = mc(BigInteger, nullable=True, comment="数据创建者账户ID")
+    update_id: M[int] = mc(BigInteger, nullable=True, comment="数据更新者账户ID")
+
+
 def format_datetime(dt: datetime) -> str:
-    """格式化日期
-    """
+    """格式化日期"""
     return dt.strftime("%Y-%m-%d %H:%M:%S")
 
 
 def format_filed(data: dict, rules: list[ORMFormatRule] = []) -> dict:
-    """格式化读取的字段
-    """
+    """格式化读取的字段"""
     basic_rules = [
         ORMFormatRule("create_dt", format_datetime),
         ORMFormatRule("update_dt", format_datetime),
@@ -38,9 +47,8 @@ def format_filed(data: dict, rules: list[ORMFormatRule] = []) -> dict:
     basic_rules.extend(rules)
 
     for obj in basic_rules:
-        filed = data.get(obj.filed, None)
-        if filed is not None:
-            data[obj.filed] = ORMFormatRule.format(filed)
+        if filed := data.get(obj.filed, None):
+            data[obj.filed] = obj.format(filed)
 
     return data
 
@@ -113,7 +121,7 @@ class ORM:
         return db.scalar(stmt.with_only_columns(func.count("1")))
 
     @staticmethod
-    def pagination(db: Session, stmt: Select, page_idx: int = 1, page_size: int = 10, order: list = None) -> dict:
+    def pagination(db: Session, stmt: Select, page_idx: int = 1, page_size: int = 10, order: list = None, format_rules: list[ORMFormatRule] = []) -> dict:
         """分页查询数据
         """
         if page_size < 1:
@@ -138,7 +146,7 @@ class ORM:
 
         # 配置分页条件
         stmt = stmt.offset(offset).limit(page_size)
-        records = ORM.all(db, stmt)
+        records = ORM.all(db, stmt, format_rules)
         data = dict(records=records, pagination=pagination)
 
         return data
