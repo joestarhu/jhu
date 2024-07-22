@@ -1,7 +1,7 @@
 from datetime import datetime
 from dataclasses import dataclass
 from math import ceil
-from typing import Callable
+from typing import Callable, Any
 from urllib.parse import quote_plus
 
 from sqlalchemy import BigInteger, DateTime, func, select, Select, MappingResult
@@ -13,7 +13,7 @@ from sqlalchemy.sql.elements import BinaryExpression
 @dataclass
 class ORMCheckRule:
     """规则检验"""
-    errcode: str | int
+    errcode: Any
     condition: BinaryExpression
 
 
