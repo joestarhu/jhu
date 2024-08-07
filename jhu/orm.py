@@ -31,8 +31,8 @@ def format_datetime(dt: datetime) -> str:
 def format_filed(data: dict, rules: list[ORMFormatRule] = []) -> dict:
     """格式化读取的字段"""
     basic_rules = [
-        ORMFormatRule("create_dt", format_datetime),
-        ORMFormatRule("update_dt", format_datetime),
+        ORMFormatRule("created_at", format_datetime),
+        ORMFormatRule("updated_at", format_datetime),
     ]
 
     basic_rules.extend(rules)
