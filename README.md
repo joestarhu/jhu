@@ -2,6 +2,10 @@
 > 这个是我自己编写的一个python工具库,简化或者自动化的帮助我做一些工作
 
 # ChangeLog
+## V1.6.0(2024-08-08)
+### orm.py
+- 追加了pytz,created_at和updated_at均是utc的时间来展示内容.默认Asia/Shanghai.
+
 ## V1.5.2(2024-06-21)
 ### orm.py
 - 追加了check

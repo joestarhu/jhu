@@ -3,10 +3,10 @@ from dataclasses import dataclass
 from math import ceil
 from typing import Callable, Any
 from urllib.parse import quote_plus
-
 from sqlalchemy import func, select, Select, MappingResult
-from sqlalchemy.orm.session import Session
+from sqlalchemy.orm import Session
 from sqlalchemy.sql.elements import BinaryExpression
+from pytz import timezone
 
 
 @dataclass
@@ -25,7 +25,11 @@ class ORMFormatRule:
 
 def format_datetime(dt: datetime) -> str:
     """格式化日期"""
-    return dt.strftime("%Y-%m-%d %H:%M:%S")
+    utc_dt = timezone("UTC").localize(dt)
+    shanghai_zone = timezone("Asia/Shanghai")
+    target_dt = utc_dt.astimezone(shanghai_zone)
+
+    return target_dt.strftime("%Y-%m-%d %H:%M:%S")
 
 
 def format_filed(data: dict, rules: list[ORMFormatRule] = []) -> dict:
@@ -50,7 +54,7 @@ class ORM:
         """创建sqlalchemy的engine url
 
         Args:
-            dialect_dbapi:数据库方言和数据库API,比如'pymsql+mysql','postgresql'
+            dialect_dbapi:数据库方言和数据库API,比如'mysql+pymysql','postgresql'
             host:主机地址
             port:端口号
             username:用户名
@@ -80,25 +84,22 @@ class ORM:
         return url
 
     @staticmethod
-    def mapping(db: Session, stmt) -> MappingResult:
-        """ORM执行结果mapping
-        """
-        return db.execute(stmt).mappings()
+    def mapping(session: Session, stmt) -> MappingResult:
+        """ORM执行结果mapping"""
+        return session.execute(stmt).mappings()
 
     @staticmethod
-    def all(db: Session, stmt: Select, format_rules: list[ORMFormatRule] = []) -> list[dict]:
-        """获取所有数据
-        """
-        ds = ORM.mapping(db, stmt)
+    def all(session: Session, stmt: Select, format_rules: list[ORMFormatRule] = []) -> list[dict]:
+        """获取所有数据"""
+        ds = ORM.mapping(session, stmt)
         result = [format_filed(dict(**one), format_rules) for one in ds]
         return result
 
     @staticmethod
-    def one(db: Session, stmt: Select, format_rules: list[ORMFormatRule] = []) -> dict | None:
-        """获取第一行数据
-        """
+    def one(session: Session, stmt: Select, format_rules: list[ORMFormatRule] = []) -> dict | None:
+        """获取第一行数据"""
         try:
-            one = next(ORM.mapping(db, stmt))
+            one = next(ORM.mapping(session, stmt))
             data = format_filed(dict(**one), format_rules)
         except StopIteration:
             return None
@@ -106,13 +107,13 @@ class ORM:
         return data
 
     @staticmethod
-    def counts(db: Session, stmt: Select) -> int:
+    def counts(session: Session, stmt: Select) -> int:
         """获取数据量
         """
-        return db.scalar(stmt.with_only_columns(func.count("1")))
+        return session.scalar(stmt.with_only_columns(func.count("1")))
 
     @staticmethod
-    def pagination(db: Session, stmt: Select, page_idx: int = 1, page_size: int = 10, order: list = None, format_rules: list[ORMFormatRule] = []) -> dict:
+    def pagination(session: Session, stmt: Select, page_idx: int = 1, page_size: int = 10, order: list = None, format_rules: list[ORMFormatRule] = []) -> dict:
         """分页查询数据
         """
         if page_size < 1:
@@ -125,7 +126,7 @@ class ORM:
                 offset = 0
                 page_idx = 1
 
-        total = ORM.counts(db, stmt)
+        total = ORM.counts(session, stmt)
         page_total = ceil(total / page_size)
 
         pagination = dict(page_idx=page_idx, page_size=page_size,
@@ -137,17 +138,17 @@ class ORM:
 
         # 配置分页条件
         stmt = stmt.offset(offset).limit(page_size)
-        records = ORM.all(db, stmt, format_rules)
+        records = ORM.all(session, stmt, format_rules)
         data = dict(records=records, pagination=pagination)
 
         return data
 
     @staticmethod
-    def check(db: Session, rules: list[ORMCheckRule], except_expression: BinaryExpression = None) -> str | int | None:
+    def check(session: Session, rules: list[ORMCheckRule], except_expression: BinaryExpression = None) -> str | int | None:
         """规则判断
 
         Args:
-            db: 数据库会话
+            session: 数据库会话
             rules: 检测规则
             expression: 例外表达式(比如,修改的时候不判断本条数据)
 
@@ -162,5 +163,5 @@ class ORM:
 
         for rule in rules:
             stmt = base_stmt.where(rule.condition)
-            if ORM.counts(db, stmt) > 0:
+            if ORM.counts(session, stmt) > 0:
                 return rule.errcode
