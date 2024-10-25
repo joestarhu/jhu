@@ -13,44 +13,48 @@ class AuthType(Enum):
     FEISHU: int = 1
 
 
-def dingding_user_info_get(ak: str, sk: str, auth_code: str) -> dict:
-    """获取钉钉的用户信息
+def get_dingtalk_user_info(ak: str, sk: str, auth_code: str) -> dict:
+    """获取钉钉用户信息
 
     Args:
-        ak: 钉钉应用的AppKey
-        sk: 钉钉应用的SecurityKey
-        auth_code: 钉钉扫码得到的auth_code
-
-    Return:
-        用户信息    
-    """
-    # 获取Access_token
-    ACCESS_TOKEN_URL = "https://api.dingtalk.com/v1.0/oauth2/userAccessToken"
-    data = dict(clientId=ak, clientSecret=sk,
-                code=auth_code, grantType="authorization_code")
-    with post(ACCESS_TOKEN_URL, json=data) as rsp:
-        access_token = rsp.json().get("accessToken", "")
-
-    # 获取UserInfo
-    USER_INFO_URL = "https://api.dingtalk.com/v1.0/contact/users/me"
-    headers = {"x-acs-dingtalk-access-token": f"{access_token}"}
-    with get(USER_INFO_URL, headers=headers) as rsp:
-        results = rsp.json()
-    return results
-
-
-def feishu_user_info_get(ak: str, sk: str, auth_code: str) -> dict:
-    """获取飞书的用户信息
-
-    Args:
-        ak: 飞书应用的AppKey
-        sk: 飞书应用的SecurityKey
-        auth_code: 飞书扫码得到的auth_code
+        ak: 钉钉应用的AppKey, 如:ding1cincjju0rvrl6c5
+        sk: 钉钉应用的SecurityKey,如:w4dkdOyB3iy9lMv7VstUqnVHgj3f-WmbUGiHj2X-HsE4Yp_Fn0pHrQ_deI1oy1Nl
+        auth_code: 钉钉扫码得到的auth_code, 如:e8ce805bbd5434168292f75c11832eac
 
     Return:
         用户信息
     """
-    # 1.获取app_access_token
+    # 1.获取access_token
+    ACCESS_TOKEN_URL = "https://api.dingtalk.com/v1.0/oauth2/userAccessToken"
+    data = dict(clientId=ak,
+                clientSecret=sk,
+                code=auth_code,
+                grantType="authorization_code")
+
+    with post(ACCESS_TOKEN_URL, json=data) as rsp:
+        access_token = rsp.json().get("accessToken", "")
+
+    # 2.获取用户信息
+    USER_INFO_URL = "https://api.dingtalk.com/v1.0/contact/users/me"
+    headers = {"x-acs-dingtalk-access-token": f"{access_token}"}
+
+    with get(USER_INFO_URL, headers=headers) as rsp:
+        result = rsp.json()
+
+    return result
+
+
+def get_feishu_user_info(ak: str, sk: str, auth_code: str) -> dict:
+    """获取飞书的用户信息
+
+    Args:
+        ak: 飞书应用的AppKey,如:cli_3a2c007d00da5bdc
+        sk: 飞书应用的SecurityKey,如:BZUG0yREh8XJfl14teRZ6rr0HeFhr2I5
+        auth_code: 飞书扫码得到的auth_code , 如:5c0t8bf1efe14119a00c5555ee066053
+
+    Return:
+        用户信息
+    """
     app_access_token_data = dict(app_id=ak, app_secret=sk)
     APP_ACCESS_TOKEN_URL = "https://open.feishu.cn/open-apis/auth/v3/app_access_token/internal"
     with post(APP_ACCESS_TOKEN_URL, json=app_access_token_data) as rsp:
@@ -89,13 +93,13 @@ class ThridAuth:
         # 回调函数注册
         match(auth_type):
             case AuthType.DINGTALK:
-                self.get_user_info_fn = dingding_user_info_get
+                self.get_user_info_fn = get_dingtalk_user_info
             case AuthType.FEISHU:
-                self.get_user_info_fn = feishu_user_info_get
+                self.get_user_info_fn = get_feishu_user_info
             case _:
                 raise TypeError("认证类型类型错误")
 
-    def login_url_generate(self, redirect_url: str, state: str = None) -> str:
+    def generate_login_url(self, redirect_url: str, state: str = None) -> str:
         """生成三方扫码登录的url地址
 
         Args:
@@ -148,13 +152,13 @@ if __name__ == "__main__":
     ding_ak = "ding_ak"
     ding_sk = "ding_sk"
     d = ThridAuth(ding_ak, ding_sk, AuthType.DINGTALK)
-    d.login_url_generate("http://localhost:9000/")
+    d.generate_login_url("http://localhost:9000/")
     # 这里的code从redirect_url返回的code中获取
     d.get_user_info("968999a21b9b38c794d230c5d80742bc")
 
     feishu_ak = "feishu_ak"
     feishu_sk = "feishu_sk"
     f = ThridAuth(feishu_ak, feishu_sk, AuthType.FEISHU)
-    f.login_url_generate("http://localhost:9000/")
+    f.generate_login_url("http://localhost:9000/")
     # 这里的code从redirect_url返回的code中获取
     f.get_user_info("b8ag458bd0f54712be8c6877273ce415")
