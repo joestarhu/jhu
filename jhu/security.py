@@ -45,6 +45,45 @@ class AESAPI:
         # 将解密后的字节串转换回字符串
         return decrypted_text.decode()
 
+    def phone_encrypt(self, plain_text: str) -> str:
+        """加密手机号;手机号按照每3位组成一段密文,然后拼接而成;
+        如:18012345678,分为 180,801,012,123,......678;
+        使用AES ECB模式加密,保障同样的明文输出同样的密文,用于手机号的模糊匹配
+
+        Args:
+            plain_text:手机号明文,例如:18012345678
+
+        Return:
+            str:加密后的手机号
+        """
+        if (length := len(plain_text)) == 0:
+            return ""
+
+        end_pos = max(length-3, 0)
+        return ",".join([self.encrypt(plain_text[i:i+3]) for i in range(end_pos+1)])
+
+    def phone_decrypt(self, encrypted_text: str, mask: bool = True) -> str:
+        """解密手机号
+
+        Args:
+            encrypted_text:加密的手机号
+            mask: 是否脱敏显示,比如180****5678        
+
+        Return:
+            str:手机号明文
+        """
+        if not encrypted_text:
+            return ""
+
+        phone_array = [self.decrypt(v) for v in encrypted_text.split(",")]
+        phone = "".join([phone_array[i][0]
+                        for i in range(8)]) + phone_array[-1]
+
+        if mask:
+            phone = f"{phone[:3]}****{phone[7:]}"
+
+        return phone
+
 
 class HashAPI:
     def hash(self, plain_text: str) -> str:
