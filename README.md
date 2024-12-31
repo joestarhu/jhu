@@ -2,6 +2,10 @@
 > 这个是我自己编写的一个python工具库,简化或者自动化的帮助我做一些工作
 
 # ChangeLog
+## V1.6.4(2024-12-31)
+### orm.py
+- 修复了counts函数:select语句中如果带有group by字段,那么with_only_columns会导致总数计算不正确
+
 ## V1.6.3(2024-11-22)
 ### security.py
 - AESAPI追加了手机号的加密和解密方法
