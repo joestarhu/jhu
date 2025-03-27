@@ -130,9 +130,14 @@ class ORM:
 
         total = ORM.counts(session, stmt)
         page_total = ceil(total / page_size)
-
         pagination = dict(page_idx=page_idx, page_size=page_size,
                           page_total=page_total, total=total)
+
+        data = dict(records=[], pagination=pagination)
+
+        # 如果总数为零,不需要继续执行查询
+        if total == 0:
+            return data
 
         # 配置排序条件
         if order is not None:
@@ -140,8 +145,7 @@ class ORM:
 
         # 配置分页条件
         stmt = stmt.offset(offset).limit(page_size)
-        records = ORM.all(session, stmt, format_rules)
-        data = dict(records=records, pagination=pagination)
+        data["records"] = ORM.all(session, stmt, format_rules)
 
         return data
 
