@@ -110,9 +110,9 @@ class ORM:
     def counts(session: Session, stmt: Select) -> int:
         """获取数据量
         """
-        return session.scalar(stmt)
+        # return session.scalar(stmt)
         # select语句中如果带有group by字段,那么with_only_columns会导致总数计算不正确
-        # return session.scalar(stmt.with_only_columns(func.count("1")))
+        return session.scalar(stmt.with_only_columns(func.count("1")))
 
     @staticmethod
     def pagination(session: Session, stmt: Select, page_idx: int = 1, page_size: int = 10, order: list = None, format_rules: list[ORMFormatRule] = []) -> dict:
