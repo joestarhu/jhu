@@ -2,6 +2,10 @@
 > 这个是我自己编写的一个python工具库,简化或者自动化的帮助我做一些工作
 
 # ChangeLog
+## V1.6.5(2025-03-27)
+### orm.py
+- pagination函数total为零的时候,不继续执行SQL,直接返回空的结果
+
 ## V1.6.4(2024-12-31)
 ### orm.py
 - 修复了counts函数:select语句中如果带有group by字段,那么with_only_columns会导致总数计算不正确
@@ -30,7 +34,6 @@
 ### auth.py
 - 修改了参数名字,DINGDING->DINGTALK
 
-
 ## V1.4.2(2024-04-12)
 ### security.py
 - 整合了HashAPI和AESAPI的解密功能
@@ -44,10 +47,8 @@
 - 追加了对称加密
 - JWTAPI中的datetime.utcnow函数弃用,用了其他替代方法
 
-## V1.3.0
-- 2023-12-19:从v1.3.0版本开始,基于python3.12进行开发.并整合优化代码
-
 ## 更早的版本说明(history)
+- 2023-12-19:从v1.3.0版本开始,基于python3.12进行开发.并整合优化代码
 - 2023-11-30:DrissionPage具备了更强的能力,selenium不在使用,因此移除掉webdriver,追加了jwt和hash password的能力
 - 2023-10-24:更新了auth,移除了钉钉,整合了钉钉和飞书的三方扫码登录
 - 2023-10-23:更新了默认chrome驱动的下载版本为88.0.4324.27,当浏览器版本低于该版本内的时候,可能无法正常运行使用
