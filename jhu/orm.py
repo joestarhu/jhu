@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from math import ceil
 from typing import Callable, Any
 from urllib.parse import quote_plus
-from sqlalchemy import func, select, Select, MappingResult
+from sqlalchemy import func, select, Select, MappingResult, text
 from sqlalchemy.orm import Session
 from sqlalchemy.sql.elements import BinaryExpression
 from pytz import timezone
@@ -112,10 +112,13 @@ class ORM:
         """
         # return session.scalar(stmt)
         # select语句中如果带有group by字段,那么with_only_columns会导致总数计算不正确
-        return session.scalar(stmt.with_only_columns(func.count("1")))
+        filed_temp = func.count(text("1"))
+        if (result := session.scalar(stmt.with_only_columns(filed_temp))) is None:
+            result = 0
+        return result
 
     @staticmethod
-    def pagination(session: Session, stmt: Select, page_idx: int = 1, page_size: int = 10, order: list = None, format_rules: list[ORMFormatRule] = []) -> dict:
+    def pagination(session: Session, stmt: Select, page_idx: int = 1, page_size: int = 10, order: list | None = None, format_rules: list[ORMFormatRule] = []) -> dict:
         """分页查询数据
         """
         if page_size < 1:
@@ -130,10 +133,9 @@ class ORM:
 
         total = ORM.counts(session, stmt)
         page_total = ceil(total / page_size)
-        pagination = dict(page_idx=page_idx, page_size=page_size,
-                          page_total=page_total, total=total)
-
-        data = dict(records=[], pagination=pagination)
+        pagination = {"page_idx": page_idx, "page_size": page_size,
+                      "page_total": page_total, "total": total}
+        data = {"records": [], "pagination": pagination}
 
         # 如果总数为零,不需要继续执行查询
         if total == 0:
@@ -150,7 +152,7 @@ class ORM:
         return data
 
     @staticmethod
-    def check(session: Session, rules: list[ORMCheckRule], except_expression: BinaryExpression = None) -> str | int | None:
+    def check(session: Session, rules: list[ORMCheckRule], except_expression: BinaryExpression | None = None) -> str | int | None:
         """规则判断
 
         Args:

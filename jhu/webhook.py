@@ -6,8 +6,9 @@
 - https://open.dingtalk.com/document/robots/custom-robot-access
 - https://developer.work.weixin.qq.com/document/path/91770
 """
+from typing import Any
 from base64 import b64encode
-from enum import Enum
+from enum import IntEnum
 from hashlib import sha256
 from hmac import new as hmac_new
 from requests import session
@@ -15,13 +16,13 @@ from time import time
 from urllib.parse import quote_plus
 
 
-class WebHookType(int, Enum):
+class WebHookType(IntEnum):
     DINGTALK = 0
     WECOM = 1
 
 
 class WebHook:
-    def __init__(self, webhook: WebHookType, url: str, sk: str = None) -> None:
+    def __init__(self, webhook: WebHookType, url: str, sk: str | None = None) -> None:
         """Webhook对象
 
         Args:
@@ -45,7 +46,7 @@ class WebHook:
     def sk(self):
         return self.__sk
 
-    def text(self, content: str, phone: list[str] = None, id: list[str] = None, all: bool = False) -> dict:
+    def text(self, content: str, phone: list[str] | None = None, id: list[str] | None = None, all: bool = False) -> dict:
         """text类型,支持钉钉和企微
 
         Args:
@@ -54,12 +55,12 @@ class WebHook:
             id:list[str],需要@的用户ID,比如['id001', 'id002']
             all:bool,是否@ALL, 仅钉钉有效,企微请在id或phone里用'@all'来表示
         """
-        result = dict(msgtype="text")
-        text = dict(content=content)
+        result: dict[str, Any] = {"msgtype": "text"}
+        text: dict[str, Any] = {"content": content}
 
         match(self.webhook):
             case WebHookType.DINGTALK:
-                at = dict(atMobiles=phone, isAtAll=all, atUserIds=id)
+                at = {"atMobiles": phone, "isAtAll": all, "atUserIds": id}
                 result["at"] = at
             case WebHookType.WECOM:
                 text["mentioned_list"] = id
@@ -76,8 +77,8 @@ class WebHook:
             url:str,点击消息跳转URL
             pic:str,图片URL
         """
-        result = dict(msgtype="link")
-        link = dict(title=title, text=text, messageUrl=url, picUrl=pic)
+        result: dict[str, str | dict] = {"msgtype": "link"}
+        link = {"title": title, "text": text, "messageUrl": url, "picUrl": pic}
         result["link"] = link
         return result
 
@@ -88,13 +89,13 @@ class WebHook:
             text:str,markdown内容
             title:str,markdown标题,仅钉钉需要填写
         """
-        result = dict(msgtype="markdown")
+        result: dict[str, str | dict] = {"msgtype": "markdown"}
 
         match(self.webhook):
             case WebHookType.DINGTALK:
-                markdown = dict(text=text, title=title)
+                markdown = {"text": text, "title": title}
             case WebHookType.WECOM:
-                markdown = dict(content=text)
+                markdown = {"content": text}
 
         result["markdown"] = markdown
         return result

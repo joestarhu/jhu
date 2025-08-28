@@ -54,7 +54,7 @@ class EmailSender:
     def sender(self):
         return self.__sender
 
-    def login(self, acct: str, passwd: str, nickname: str = None) -> None:
+    def login(self, acct: str, passwd: str, nickname: str | None = None) -> None:
         """登录SMTP服务器
 
         Args:
@@ -68,7 +68,7 @@ class EmailSender:
         self.__sender = formataddr([nickname, acct], self.encode)
         self.acct = acct
 
-    def send(self, title: str, content: str, attach_list: list[str] = [], to: list[str] = None, cc: list[str] = None, bcc: list[str] = None) -> None:
+    def send(self, title: str, content: str, attach_list: list[str] = [], to: list[str] | None = None, cc: list[str] | None = None, bcc: list[str] | None = None) -> None:
         """发送邮件
 
         Args:

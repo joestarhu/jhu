@@ -1,16 +1,16 @@
 """
 整合钉钉,飞书第三方网页登录
 """
-from enum import Enum
+from enum import IntEnum
 from urllib.parse import quote_plus
 from requests import post, get
 
 
-class AuthType(Enum):
+class AuthType(IntEnum):
     # 钉钉
-    DINGTALK: int = 0
+    DINGTALK = 0
     # 飞书
-    FEISHU: int = 1
+    FEISHU = 1
 
 
 def get_dingtalk_user_info(ak: str, sk: str, auth_code: str) -> dict:
@@ -26,10 +26,8 @@ def get_dingtalk_user_info(ak: str, sk: str, auth_code: str) -> dict:
     """
     # 1.获取access_token
     ACCESS_TOKEN_URL = "https://api.dingtalk.com/v1.0/oauth2/userAccessToken"
-    data = dict(clientId=ak,
-                clientSecret=sk,
-                code=auth_code,
-                grantType="authorization_code")
+    data = {"clientId": ak, "clientSecret": sk,
+            "code": auth_code, "grantType": "authorization_code"}
 
     with post(ACCESS_TOKEN_URL, json=data) as rsp:
         access_token = rsp.json().get("accessToken", "")
@@ -55,23 +53,22 @@ def get_feishu_user_info(ak: str, sk: str, auth_code: str) -> dict:
     Return:
         用户信息
     """
-    app_access_token_data = dict(app_id=ak, app_secret=sk)
+    app_access_token_data = {"app_id": ak, "app_secret": sk}
     APP_ACCESS_TOKEN_URL = "https://open.feishu.cn/open-apis/auth/v3/app_access_token/internal"
     with post(APP_ACCESS_TOKEN_URL, json=app_access_token_data) as rsp:
         app_access_token = rsp.json().get("app_access_token", "")
 
     # 2.获取access_token
     ACCESS_TOKEN_URL = "https://open.feishu.cn/open-apis/authen/v1/oidc/access_token"
-    access_token_headers = dict(Authorization=f"Bearer {app_access_token}")
-    access_token_data = dict(
-        grant_type="authorization_code", code=auth_code)
+    access_token_headers = {"Authorization": f"Bearer {app_access_token}"}
+    access_token_data = {"grant_type": "authorization_code", "code": auth_code}
     with post(ACCESS_TOKEN_URL, headers=access_token_headers, json=access_token_data) as rsp:
         user_access_token = rsp.json()["data"]["access_token"]
 
     # 3.获取用户信息
     USER_INFO_URL = "https://open.feishu.cn/open-apis/authen/v1/user_info"
-    user_access_token_headers = dict(
-        Authorization=f"Bearer {user_access_token}")
+    user_access_token_headers = {
+        "Authorization": f"Bearer {user_access_token}"}
     with get(USER_INFO_URL, headers=user_access_token_headers) as rsp:
         result = rsp.json()
     return result
@@ -99,7 +96,7 @@ class ThridAuth:
             case _:
                 raise TypeError("认证类型类型错误")
 
-    def generate_login_url(self, redirect_url: str, state: str = None) -> str:
+    def generate_login_url(self, redirect_url: str, state: str | None = None) -> str:
         """生成三方扫码登录的url地址
 
         Args:
@@ -114,21 +111,24 @@ class ThridAuth:
                 state = state or "JHU_DINGTALK"
                 # 钉钉三方登录网页地址拼接
                 prefix_url = "https://login.dingtalk.com/oauth2/challenge.htm"
-                data = dict(
-                    redirect_uri=quote_plus(redirect_url),
-                    client_id=self.ak,
-                    response_type="code", scope="openid", state=state, prompt="consent"
-                )
+                data = {
+                    "redirect_uri": quote_plus(redirect_url),
+                    "client_id": self.ak,
+                    "response_type": "code",
+                    "scope": "openid",
+                    "state": state,
+                    "prompt": "consent"
+                }
             case AuthType.FEISHU:
                 # 飞书三方登录网页地址拼接
                 state = state or "JHU_FEISHU"
                 prefix_url = "https://open.feishu.cn/open-apis/authen/v1/authorize"
-                data = dict(
-                    redirect_uri=quote_plus(redirect_url),
-                    app_id=self.ak,
-                    scope="contact:user.phone:readonly",
-                    state=state
-                )
+                data = {
+                    "redirect_uri": quote_plus(redirect_url),
+                    "app_id": self.ak,
+                    "scope": "contact:user.phone:readonly",
+                    "state": state
+                }
             case _:
                 raise TypeError("认证类型类型错误")
 
