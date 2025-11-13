@@ -1,8 +1,7 @@
 """
 安全模块工具
 """
-from datetime import datetime, timedelta
-from zoneinfo import ZoneInfo
+from datetime import datetime, timedelta, timezone
 from bcrypt import checkpw, gensalt, hashpw
 from base64 import b64decode, b64encode
 from Cryptodome.Cipher import AES
@@ -53,7 +52,7 @@ class AESAPI:
         Args:
             plain_text:手机号明文,例如:18012345678
 
-        Return:
+        Returns:
             str:加密后的手机号
         """
         if (length := len(plain_text)) == 0:
@@ -69,7 +68,7 @@ class AESAPI:
             encrypted_text:加密的手机号
             mask: 是否脱敏显示,比如180****5678        
 
-        Return:
+        Returns:
             str:手机号明文
         """
         if not encrypted_text:
@@ -122,15 +121,15 @@ class JWTAPI:
     def encode(self, **kw) -> str:
         """编码JWT的token
         """
-        # expire = datetime.utcnow() + timedelta(minutes=self.expire)
-        expire = datetime.now(ZoneInfo("UTC")) + timedelta(minutes=self.expire)
+        expire = datetime.now(timezone.utc) + timedelta(minutes=self.expire)
+        # expire = datetime.now(ZoneInfo("UTC")) + timedelta(minutes=self.expire)
         payload = dict(**kw, exp=expire)
         return jwt.encode(payload, key=self.key, algorithm=self.algorithm)
 
     def decode(self, token: str) -> dict:
         """解码JWT的token
         """
-        return jwt.decode(token=token, key=self.key, algorithms=self.algorithm)
+        return jwt.decode(token=token, key=self.key, algorithms=[self.algorithm])
 
 
 if __name__ == "__main__":

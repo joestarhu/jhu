@@ -19,7 +19,7 @@ setup(
     # 包的名称
     name="jhu",
     # 包的版本,每次更新或升级包都需要更新它
-    version="1.6.7",
+    version="1.7.0",
     # 描述
     description="jhu是一个工具包,简化或自动化的做一些任务",
     # 作者
@@ -39,23 +39,20 @@ setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: MacOS",
         "Topic :: Software Development :: Libraries :: Python Modules",
-        "Programming Language :: Python :: 3.12"
+        "Programming Language :: Python :: 3.14"
     ],
 
-    # 依赖的包
-    install_requires=[
-        # auth.py ,webhook.py
-        "requests",
-        # security.py
-        "python-jose",
-        # security.py
-        "bcrypt",
-        # security.py
-        "pycryptodomex",
-        # orm.py
-        "sqlalchemy",
-        # orm.py
-        "pytz",
-    ],
+    # 依赖的包必须安装
+    install_requires=[],
+
+    # 可选的安装包
+    extras_require={
+        "auth": ["requests"],
+        "email": [],
+        "orm": ["sqlalchemy", "pytz"],
+        "security": ["python-jose", "bcrypt", "pycryptodomex"],
+        "webhook": ["requests"],
+    },
+
     zip_safe=True
 )
