@@ -2,8 +2,9 @@
 安全模块工具
 """
 from datetime import datetime, timedelta, timezone
-from bcrypt import checkpw, gensalt, hashpw
 from base64 import b64decode, b64encode
+from uuid import uuid4
+from bcrypt import checkpw, gensalt, hashpw
 from Cryptodome.Cipher import AES
 from Cryptodome.Util.Padding import pad, unpad
 from jose import jwt
@@ -85,45 +86,50 @@ class AESAPI:
 
 
 class HashAPI:
-    def hash(self, plain_text: str) -> str:
+    @staticmethod
+    def hash(plain_text: str) -> str:
         """明文哈希加密
         """
         return hashpw(plain_text.encode(), gensalt()).decode()
 
-    def verify(self, plain_text: str, hash_text: str) -> bool:
+    @staticmethod
+    def verify(plain_text: str, hash_text: str) -> bool:
         """验证明文和密文的内容是否一致
         """
         return checkpw(plain_text.encode(), hash_text.encode())
 
 
 class JWTAPI:
-    def __init__(self, key: str, expire_min: int, algorithm: str = "HS256") -> None:
+    def __init__(self, key: str, algorithm: str = "HS256") -> None:
         """JWT对象
 
         Args:
             key:str,密钥
-            expire_min:int,token的有效期(分钟)
             algorithm:str,加密算法
 
         """
-        self.__key = key
-        self.__algorithm = algorithm
-        self.expire = expire_min
+        self._key = key
+        self._algorithm = algorithm
 
     @property
     def key(self):
-        return self.__key
+        return self._key
 
     @property
     def algorithm(self):
-        return self.__algorithm
+        return self._algorithm
 
-    def encode(self, **kw) -> str:
-        """编码JWT的token
+    def encode(self, expire_min: float, **kw) -> str:
+        """编码JWT的token, 其中jti,iat,exp会自动生成,无需设置
+
+        Args:
+            expire_min:float,token的有效期(分钟)
+
         """
-        expire = datetime.now(timezone.utc) + timedelta(minutes=self.expire)
-        # expire = datetime.now(ZoneInfo("UTC")) + timedelta(minutes=self.expire)
-        payload = dict(**kw, exp=expire)
+        jti = uuid4().hex
+        iat = datetime.now(timezone.utc)
+        exp = iat + timedelta(minutes=expire_min)
+        payload = dict(**kw, exp=exp, iat=iat, jti=jti)
         return jwt.encode(payload, key=self.key, algorithm=self.algorithm)
 
     def decode(self, token: str) -> dict:

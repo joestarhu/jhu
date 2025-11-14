@@ -31,5 +31,4 @@ if __name__ == "__main__":
     f.create_login_url("http://localhost:9000/")
     # 这里的code从redirect_uri返回的code中获取
     f.get_user_info("b8ag458bd0f54712be8c6877273ce415")
-
 ```
