@@ -100,16 +100,18 @@ class HashAPI:
 
 
 class JWTAPI:
-    def __init__(self, key: str, algorithm: str = "HS256") -> None:
+    def __init__(self, key: str, expire_min: float, algorithm: str = "HS256") -> None:
         """JWT对象
 
         Args:
             key:str,密钥
+            expire_min:float,token的有效期(分钟)
             algorithm:str,加密算法
 
         """
         self._key = key
         self._algorithm = algorithm
+        self._expire_min = expire_min
 
     @property
     def key(self):
@@ -119,7 +121,11 @@ class JWTAPI:
     def algorithm(self):
         return self._algorithm
 
-    def encode(self, expire_min: float, **kw) -> str:
+    @property
+    def expire_min(self):
+        return self._expire_min
+
+    def encode(self, **kw) -> str:
         """编码JWT的token, 其中jti,iat,exp会自动生成,无需设置
 
         Args:
@@ -128,7 +134,7 @@ class JWTAPI:
         """
         jti = uuid4().hex
         iat = datetime.now(timezone.utc)
-        exp = iat + timedelta(minutes=expire_min)
+        exp = iat + timedelta(minutes=self.expire_min)
         payload = dict(**kw, exp=exp, iat=iat, jti=jti)
         return jwt.encode(payload, key=self.key, algorithm=self.algorithm)
 
